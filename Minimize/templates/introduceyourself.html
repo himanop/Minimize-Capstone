@@ -1,0 +1,25 @@
+<h1>Introduce Yourself</h1>
+<form method="POST" action="">
+    <!--Hidden tag is used for protection of the form-->
+    {{form.hidden_tag()}}
+    <fieldset class="form-group">
+            <!--We are using the variable names defined in forms.py to refer to the fields-->
+            <div>
+                {{ form.instagram_handle.label }}
+                {{ form.instagram_handle }}
+            </div>
+            <div>
+                {{ form.snapchat_handle.label }}
+                {{ form.snapchat_handle }}
+            </div>
+            <div>
+                {{ form.profile_picture.label }}
+                {{ form.profile_picture }}
+            </div>
+            <div>
+                {{ form.short_bio.label }}
+                {{ form.short_bio }}
+            </div>
+        {{form.submit}}
+    </fieldset>
+</form>

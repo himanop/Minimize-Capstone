@@ -1,0 +1,29 @@
+<h1>Sign Up: The Basics</h1>
+
+<a href="{{url_for('index')}}" class="link active">Minimize</a>
+<link rel="stylesheet" href="./static/registerbasic.css">
+<div class="content-section">
+    <!--the empty action below for the form means that it will go back to the same route we are on-->
+    <form method="POST" action="">
+        <!--Hidden tag is used for protection of the form-->
+        {{form.hidden_tag()}}
+        <fieldset class="form-group">
+                <!--We are using the variable names defined in forms.py to refer to the fields-->
+                <div>
+                    {{ form.email.label }}
+                    {{ form.email }}
+                </div>
+                <div>
+                    {{ form.password.label }}
+                    {{ form.password }}
+                </div>
+            {{form.submit}}
+        </fieldset>
+    </form>
+    <div>
+        <small>Forgot Password?
+            <!--The URL_FOR function accesses the route name. Not the URL.-->
+            <a href="{{url_for('signup')}}">Sign In!</a>
+        </small>
+    </div>
+</div>
