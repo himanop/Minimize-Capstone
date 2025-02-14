@@ -1,7 +1,6 @@
 from flask import Flask, render_template, flash, redirect, url_for, session
 from Minimize import app, bcrypt
 from Minimize.forms import RegistrationForm, LoginForm, IntroduceYourselfForm, YourHabitsForm
-# from app import app
 
 @app.route('/')
 def index():
@@ -19,11 +18,6 @@ def signup():
         return redirect(url_for('signup'))
     return render_template('signup.html', title='Sign Up', form=form)
 
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    form = LoginForm()
-    return render_template('login.html', title='Login', form=form)
-
 @app.route('/introduceyourself', methods=['GET', 'POST'])
 def introduceyourself():
     form = IntroduceYourselfForm()
@@ -33,4 +27,9 @@ def introduceyourself():
 def yourhabits():
     form = YourHabitsForm()
     return render_template('yourhabits.html', title='Your Habits', form=form)
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    form = LoginForm()
+    return render_template('login.html', title='Login', form=form)
 
