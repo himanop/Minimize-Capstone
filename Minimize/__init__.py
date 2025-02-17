@@ -1,19 +1,32 @@
 from flask import Flask
-from datetime import datetime
-#URI is where the DB is located
-# from flask_sqlalchemy import SQLAlchemy
-from flask_bcrypt import Bcrypt
-# from flask_login import LoginManager
+from config import Config
+from Minimize.extensions import db, bcrypt, login_manager
 
-app = Flask(__name__)
-#Flask-SQLAlchemy relies on the application context to access configuration settings and other necessary resources.
-#Need to import "app" in the script when trying to run the create_all() function to make the DB
-app.config['SECRET_KEY'] = 'd014d81f366194e43f3bd4ed8e5b81a7'
-#The three slashes below represent the location of the site.db relative to this file.
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
-# db = SQLAlchemy(app)
-bcrypt = Bcrypt(app)
-# login_manager = LoginManager(app)
+print("Inside __init__.py")
 
-from Minimize import routes
-from Minimize import app
+def create_app():
+    # global app
+    print("Inside create_app()")
+    app = Flask(__name__)
+    app.config.from_object(Config)
+    print("Before db.init_app(app)")
+    db.init_app(app)
+    print("After db.init_app(app)")
+    bcrypt.init_app(app)
+    print("After bcrypt.init_app(app)")
+    login_manager.init_app(app)
+    print("After login_manager.init_app(app)")
+    login_manager.login_view = "routes.login"
+    login_manager.login_message_category = "info"
+    print("After login_manager.login_view")
+    print("After Minimize.routes import")  # ✅ Import routes AFTER app is created
+    # app.register_blueprint(routes)
+    return app  # ✅ Return the Flask app instance
+
+
+
+from Minimize.models import User  # ✅ Import models AFTER initializing extensions
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))

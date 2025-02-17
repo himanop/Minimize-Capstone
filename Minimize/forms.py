@@ -8,14 +8,14 @@ from wtforms.validators import DataRequired, Length, EqualTo, ValidationError
 
 class RegistrationForm(FlaskForm):
     #The variable names are how we are going to refer to the fields in the HTML code
-    first_name = StringField('First Name')
-    last_name = StringField('Last Name')
+    first_name = StringField('First Name', validators=[DataRequired()], render_kw={"placeholder": "First Name"})
+    last_name = StringField('Last Name', validators=[DataRequired()], render_kw={"placeholder": "Last Name"})
     #This is just a comment
-    email = EmailField('Email')
+    email = EmailField('Email', validators=[DataRequired()], render_kw={"placeholder": "Email"})
     username = StringField('Username', 
-                           validators=[DataRequired(), Length(min=4, max=15)])
-    password = PasswordField('Password', validators=[DataRequired()])
-    confirm_password = PasswordField("Confirm Password", validators=[DataRequired(), EqualTo('password')])
+                           validators=[DataRequired(), Length(min=4, max=15)],render_kw={"placeholder": "Username"})
+    password = PasswordField('Password', validators=[DataRequired()],render_kw={"placeholder": "Password"})
+    confirm_password = PasswordField("Confirm Password", validators=[DataRequired(), EqualTo('password')], render_kw={"placeholder": "Confirm Password"})
     submit = SubmitField('Create Account')
 
     def validate_username(self, username):
@@ -36,9 +36,9 @@ class LoginForm(FlaskForm):
     submit = SubmitField('Login')
 
 class IntroduceYourselfForm(FlaskForm):
-    instagram_handle = StringField('Instagram Handle')
-    snapchat_handle = StringField('Snapchat Handle')
-    profile_picture = FileField('Profile Picture', validators=[FileAllowed(['jpg', 'png'])])
+    instagram_handle = StringField('Instagram Handle', render_kw={"placeholder": "Leave empty if you don't have one"})
+    snapchat_handle = StringField('Snapchat Handle', render_kw={"placeholder": "Leave empty if you don't have one"})
+    profile_picture = FileField('Profile Picture', validators=[FileAllowed(['png', 'jpg', 'jpeg'], 'Images only!')])
     short_bio = TextAreaField('Short Bio')
     submit = SubmitField('Move Forward')
 
