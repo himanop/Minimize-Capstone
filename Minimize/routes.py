@@ -1,4 +1,4 @@
-from flask import Flask, render_template, flash, redirect, url_for, session, request
+from flask import Flask, render_template, flash, redirect, url_for, session, request, Blueprint
 print("Top of routes.py")
 from Minimize import app, bcrypt, db
 print("After app import in routes.py")
@@ -8,12 +8,12 @@ from flask_sqlalchemy import SQLAlchemy
 from config import Config
 
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://pgauser:hs@localhost:5432/minimize-db'
-
+print(f"inside route app instance {id(app)}")
 # db = SQLAlchemy(app)
-print("Inside routes.py")
 @app.route('/')
 def index():
-    return render_template('welcome.html')
+    # return render_template('welcome.html')
+    return "Testing"
 
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
