@@ -7,13 +7,12 @@ from Minimize.models import User, User_Socials, User_Habits
 from flask_sqlalchemy import SQLAlchemy
 from config import Config
 
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://pgauser:hs@localhost:5432/minimize-db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://pgauser:hs@localhost:5432/minimize-db'
 print(f"inside route app instance {id(app)}")
 # db = SQLAlchemy(app)
 @app.route('/')
 def index():
-    # return render_template('welcome.html')
-    return "Testing"
+    return render_template('welcome.html')
 
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():

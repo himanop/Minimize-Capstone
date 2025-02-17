@@ -1,10 +1,10 @@
-# from Minimize import db, login_manager
+from Minimize import app
 from flask_login import UserMixin
 from datetime import datetime
 from flask_sqlalchemy import SQLAlchemy
 from Minimize.extensions import db, bcrypt, login_manager
 from flask_login import UserMixin
-db = SQLAlchemy()
+# db = SQLAlchemy()
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -18,6 +18,7 @@ class User(db.Model, UserMixin):
     email = db.Column(db.String(120), unique=True, nullable=False)
     username = db.Column(db.String(15), unique=True, nullable=False)
     password_hash = db.Column(db.String(256), nullable=False)
+    nickname = db.Column(db.String(50), nullable=True)
     date_created = db.Column(db.DateTime, default=datetime.utcnow)
 
     # One-to-One Relationship with User_Socials and User_Habits
