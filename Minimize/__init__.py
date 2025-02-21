@@ -19,8 +19,6 @@ def create_app():
     login_manager.init_app(app)
     # print("After login_manager.init_app(app)")
     migrate.init_app(app, db)
-    login_manager.login_view = "routes.login"
-    login_manager.login_message_category = "info"
     # from Minimize import models
     from Minimize.models import User
     return app  # ✅ Return the Flask app instance

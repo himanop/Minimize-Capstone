@@ -1,13 +1,15 @@
-from flask import Flask, render_template, flash, redirect, url_for, session, request, Blueprint
-print("Top of routes.py")
+from flask import Flask, render_template, flash, redirect, url_for, session, request
+# print("Top of routes.py")
 from Minimize import app, bcrypt, db
-print("After app import in routes.py")
+# print("After app import in routes.py")
 from Minimize.forms import RegistrationForm, LoginForm, IntroduceYourselfForm, YourHabitsForm
 from Minimize.models import User, User_Socials, User_Habits
 from flask_sqlalchemy import SQLAlchemy
+from flask_login import LoginManager, login_user, current_user, logout_user, login_required
 from config import Config
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://pgauser:hs@localhost:5432/minimize-db'
+
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://pgauser:hs@localhost:5432/minimize-db'
 print(f"inside route app instance {id(app)}")
 # db = SQLAlchemy(app)
 @app.route('/')
@@ -54,13 +56,15 @@ def yourhabits():
         session['cleanliness'] = form.cleanliness.data
         session['relationship'] = form.relationship.data
 
+        hashed_password = bcrypt.generate_password_hash(session.get('password')).decode('utf-8')
+
         # Create and save User
         new_user = User(
             first_name=session.get('first_name'),
             last_name=session.get('last_name'),
             email=session.get('email'),
             username=session.get('username'),
-            password_hash=session.get('password')
+            password_hash=hashed_password
         )
         db.session.add(new_user)
         db.session.commit()  # User must be committed first to get an ID
@@ -99,8 +103,29 @@ def yourhabits():
 def registrationcomplete():
     return render_template('registrationcomplete.html')
 
-@app.route('/login', methods=['GET', 'POST'])
-def login():
+@app.route('/signin', methods=['GET', 'POST'])
+def signin():
     form = LoginForm()
-    return render_template('login.html', title='Login', form=form)
+    if form.validate_on_submit():
+        user = User.query.filter_by(username=form.username.data).first()
+        print(f"User: {user.username}")
+        print(f'{bcrypt.check_password_hash(user.password_hash, form.password.data)}')
+        if user and bcrypt.check_password_hash(user.password_hash, form.password.data):
+            login_user(user)
+            flash("You have been logged in!", "success")
+            return redirect(url_for('dashboard'))
+        else:
+            flash("Login Unsuccessful. Please check email and password", "danger")
+    return render_template('signin.html', title='Sign In', form=form)
+
+@app.route('/signout')
+@login_required
+def signout():
+    logout_user()
+    return redirect(url_for('index'))
+
+@app.route('/dashboard')
+@login_required
+def dashboard():
+    return render_template('dashboard.html', title='Dashboard')
 
