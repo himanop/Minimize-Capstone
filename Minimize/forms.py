@@ -47,8 +47,8 @@ class UpdateAccountForm(FlaskForm):
     sleep = SelectField('Choose your sleeping habit', choices=[('Early Bird', 'Early Bird'), ('Night Owl', 'Night Owl'), ('Depends', 'Depends')])
     cleanliness = SelectField('Choose your level of cleanliness', choices=[('Tidy', 'Tidy'), ('Average', 'Average'), ('Messy', 'Messy')])
     relationship = SelectField('Are you in a relationship?', choices=[('Yes', 'Yes'), ('No', 'No'), ('Complicated', 'Complicated')])
-    password = PasswordField('Password', validators=[DataRequired()],render_kw={"placeholder": "New Password"})
-    confirm_password = PasswordField("Confirm Password", validators=[DataRequired(), EqualTo('password')], render_kw={"placeholder": "Confirm New Password"})
+    # password = PasswordField('Password', validators=[DataRequired()],render_kw={"placeholder": "New Password"})
+    # confirm_password = PasswordField("Confirm Password", validators=[DataRequired(), EqualTo('password')], render_kw={"placeholder": "Confirm New Password"})
     submit = SubmitField('Finish')
 
 class LoginForm(FlaskForm):

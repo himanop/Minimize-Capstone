@@ -145,6 +145,8 @@ def updateprofile():
     user = current_user
     user_socials = User_Socials.query.filter_by(user_id=current_user.id).first()
     user_habits = User_Habits.query.filter_by(user_id=current_user.id).first()
+    print(f"User Socials: {user_socials}")
+    print(f"User Habits: {user_habits}")
     form_data = {
         "instagram_handle": user_socials.instagram_handle if user_socials else "",
         "snapchat_handle": user_socials.snapchat_handle if user_socials else "",
@@ -154,42 +156,23 @@ def updateprofile():
         "cleanliness": user_habits.cleanliness if user_habits else "",
         "relationship": user_habits.relationship if user_habits else "",
     }
+    print(f"Form Data: {form_data}")
     form = UpdateAccountForm(data=form_data)
     if form.validate_on_submit():
+        print("Form Validated")
         # Update or Create Social Media Entry
-        print(f"User Socials: {user_socials}")
-        print(f"User Habits: {user_habits}")
         if user_socials:
+            print("User Socials Exist and we are inside the if statement")
             user_socials.instagram_handle = form.instagram_handle.data
             user_socials.snapchat_handle = form.snapchat_handle.data
             user_socials.profile_picture = form.profile_picture.data
             user_socials.short_bio = form.short_bio.data
-        # else:
-        #     user_socials = UserSocials(
-        #         user_id=user.id,
-        #         instagram_handle=form.instagram_handle.data,
-        #         snapchat_handle=form.snapchat_handle.data,
-        #         profile_picture=form.profile_picture.data,
-        #         short_bio=form.short_bio.data
-        #     )
-            # db.session.add(user_socials)
-            # db.session.commit()
-
-        # Update or Create Habit Entry
+        print(f'User Socials: {user_socials}')
         if user_habits:
             user_habits.sleep = form.sleep.data
             user_habits.cleanliness = form.cleanliness.data
             user_habits.relationship = form.relationship.data
-        # else:
-        #     user_habits = UserHabits(
-        #         user_id=user.id,
-        #         sleep=form.sleep.data,
-        #         cleanliness=form.cleanliness.data,
-        #         relationship=form.relationship.data
-        #     )
-            # db.session.add(user_habits)
-
-        # Commit changes
+        print(f"User Habits: {user_habits}")
         db.session.commit()
         flash('Profile updated successfully!', 'success')
         return redirect(url_for('updateprofile'))
@@ -204,3 +187,8 @@ def myitems():
 @login_required
 def mygroups():
     return render_template('mygroups.html', title='Groups')
+
+@app.route('/profileupdated')
+@login_required
+def profileupdated():
+    return render_template('profileupdated.html', user=current_user)
