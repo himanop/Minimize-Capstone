@@ -34,9 +34,21 @@ class IntroduceYourselfForm(FlaskForm):
     submit = SubmitField('Move Forward')
 
 class YourHabitsForm(FlaskForm):
-    sleep = SelectField('Choose your sleeping habit', choices=[('early_bird', 'Early Bird'), ('night_owl', 'Night Owl'), ('depends', 'Depends')])
-    cleanliness = SelectField('Choose your level of cleanliness', choices=[('tidy', 'Tidy'), ('average', 'Average'), ('messy', 'Messy')])
-    relationship = SelectField('Are you in a relationship?', choices=[('yes', 'Yes'), ('no', 'No'), ('complicated', 'Complicated')])
+    sleep = SelectField('Choose your sleeping habit', choices=[('Early Bird', 'Early Bird'), ('Night Owl', 'Night Owl'), ('Depends', 'Depends')])
+    cleanliness = SelectField('Choose your level of cleanliness', choices=[('Tidy', 'Tidy'), ('Average', 'Average'), ('Messy', 'Messy')])
+    relationship = SelectField('Are you in a relationship?', choices=[('Yes', 'Yes'), ('No', 'No'), ('Complicated', 'Complicated')])
+    submit = SubmitField('Finish')
+
+class UpdateAccountForm(FlaskForm):
+    instagram_handle = StringField('Instagram Handle', render_kw={"placeholder": "Leave empty if you don't have one"})
+    snapchat_handle = StringField('Snapchat Handle', render_kw={"placeholder": "Leave empty if you don't have one"})
+    profile_picture = FileField('Profile Picture', validators=[FileAllowed(['png', 'jpg', 'jpeg'], 'Images only!')])
+    short_bio = TextAreaField('Short Bio')
+    sleep = SelectField('Choose your sleeping habit', choices=[('Early Bird', 'Early Bird'), ('Night Owl', 'Night Owl'), ('Depends', 'Depends')])
+    cleanliness = SelectField('Choose your level of cleanliness', choices=[('Tidy', 'Tidy'), ('Average', 'Average'), ('Messy', 'Messy')])
+    relationship = SelectField('Are you in a relationship?', choices=[('Yes', 'Yes'), ('No', 'No'), ('Complicated', 'Complicated')])
+    password = PasswordField('Password', validators=[DataRequired()],render_kw={"placeholder": "New Password"})
+    confirm_password = PasswordField("Confirm Password", validators=[DataRequired(), EqualTo('password')], render_kw={"placeholder": "Confirm New Password"})
     submit = SubmitField('Finish')
 
 class LoginForm(FlaskForm):

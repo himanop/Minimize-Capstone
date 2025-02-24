@@ -1,1 +1,6 @@
-<h1>This is the dashboard!</h1>
+<h1>Welcome {{user.first_name}}</h1>
+<h3>This is the dashboard</h3>
+<a href="{{url_for('myprofile')}}" class="link active">My Profile</a>
+<a href="{{url_for('myitems')}}" class="link active">My Items</a>
+<a href="{{url_for('mygroups')}}" class="link active">My Groups</a>
+<a href="{{url_for('signout')}}" class="link active">Signout</a>

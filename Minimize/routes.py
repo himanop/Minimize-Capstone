@@ -2,7 +2,7 @@ from flask import Flask, render_template, flash, redirect, url_for, session, req
 # print("Top of routes.py")
 from Minimize import app, bcrypt, db
 # print("After app import in routes.py")
-from Minimize.forms import RegistrationForm, LoginForm, IntroduceYourselfForm, YourHabitsForm
+from Minimize.forms import RegistrationForm, LoginForm, IntroduceYourselfForm, YourHabitsForm, UpdateAccountForm
 from Minimize.models import User, User_Socials, User_Habits
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, login_user, current_user, logout_user, login_required
@@ -64,7 +64,7 @@ def yourhabits():
             last_name=session.get('last_name'),
             email=session.get('email'),
             username=session.get('username'),
-            password_hash=hashed_password
+            password_hash=session.get('password')
         )
         db.session.add(new_user)
         db.session.commit()  # User must be committed first to get an ID
@@ -109,6 +109,9 @@ def signin():
     if form.validate_on_submit():
         user = User.query.filter_by(username=form.username.data).first()
         print(f"User: {user.username}")
+        print(f"Password: {form.password
+        .data}")
+        print(f'Hash:{user.password_hash}')
         print(f'{bcrypt.check_password_hash(user.password_hash, form.password.data)}')
         if user and bcrypt.check_password_hash(user.password_hash, form.password.data):
             login_user(user)
@@ -127,5 +130,77 @@ def signout():
 @app.route('/dashboard')
 @login_required
 def dashboard():
-    return render_template('dashboard.html', title='Dashboard')
+    return render_template('dashboard.html', title='Dashboard', user=current_user)
 
+@app.route('/myprofile')
+@login_required
+def myprofile():
+    user_socials = User_Socials.query.filter_by(user_id=current_user.id).first()
+    user_habits = User_Habits.query.filter_by(user_id=current_user.id).first()
+    return render_template('myprofile.html', title='Profile',user=current_user, user_socials=user_socials, user_habits=user_habits)
+
+@app.route('/myprofile/update', methods=['GET', 'POST'])
+@login_required
+def updateprofile():
+    user = current_user
+    user_socials = User_Socials.query.filter_by(user_id=current_user.id).first()
+    user_habits = User_Habits.query.filter_by(user_id=current_user.id).first()
+    form_data = {
+        "instagram_handle": user_socials.instagram_handle if user_socials else "",
+        "snapchat_handle": user_socials.snapchat_handle if user_socials else "",
+        "profile_picture": user_socials.profile_picture if user_socials else "",
+        "short_bio": user_socials.short_bio if user_socials else "",
+        "sleep": user_habits.sleep if user_habits else "",
+        "cleanliness": user_habits.cleanliness if user_habits else "",
+        "relationship": user_habits.relationship if user_habits else "",
+    }
+    form = UpdateAccountForm(data=form_data)
+    if form.validate_on_submit():
+        # Update or Create Social Media Entry
+        print(f"User Socials: {user_socials}")
+        print(f"User Habits: {user_habits}")
+        if user_socials:
+            user_socials.instagram_handle = form.instagram_handle.data
+            user_socials.snapchat_handle = form.snapchat_handle.data
+            user_socials.profile_picture = form.profile_picture.data
+            user_socials.short_bio = form.short_bio.data
+        # else:
+        #     user_socials = UserSocials(
+        #         user_id=user.id,
+        #         instagram_handle=form.instagram_handle.data,
+        #         snapchat_handle=form.snapchat_handle.data,
+        #         profile_picture=form.profile_picture.data,
+        #         short_bio=form.short_bio.data
+        #     )
+            # db.session.add(user_socials)
+            # db.session.commit()
+
+        # Update or Create Habit Entry
+        if user_habits:
+            user_habits.sleep = form.sleep.data
+            user_habits.cleanliness = form.cleanliness.data
+            user_habits.relationship = form.relationship.data
+        # else:
+        #     user_habits = UserHabits(
+        #         user_id=user.id,
+        #         sleep=form.sleep.data,
+        #         cleanliness=form.cleanliness.data,
+        #         relationship=form.relationship.data
+        #     )
+            # db.session.add(user_habits)
+
+        # Commit changes
+        db.session.commit()
+        flash('Profile updated successfully!', 'success')
+        return redirect(url_for('updateprofile'))
+    return render_template('updateprofile.html', title='Update Profile', form=form)
+
+@app.route('/myitems')
+@login_required
+def myitems():
+    return render_template('myitems.html', title='Items')
+
+@app.route('/mygroups')
+@login_required
+def mygroups():
+    return render_template('mygroups.html', title='Groups')
