@@ -4,7 +4,6 @@ from datetime import datetime
 from flask_sqlalchemy import SQLAlchemy
 from Minimize.extensions import db, bcrypt, login_manager
 from flask_login import UserMixin
-# db = SQLAlchemy()
 
 @login_manager.user_loader
 def load_user(user_id):

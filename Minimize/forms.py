@@ -49,7 +49,7 @@ class UpdateAccountForm(FlaskForm):
     relationship = SelectField('Are you in a relationship?', choices=[('Yes', 'Yes'), ('No', 'No'), ('Complicated', 'Complicated')])
     # password = PasswordField('Password', validators=[DataRequired()],render_kw={"placeholder": "New Password"})
     # confirm_password = PasswordField("Confirm Password", validators=[DataRequired(), EqualTo('password')], render_kw={"placeholder": "Confirm New Password"})
-    submit = SubmitField('Finish')
+    submit = SubmitField('Update Profile')
 
 class LoginForm(FlaskForm):
     #The code below for the email might need to change because the field is different...

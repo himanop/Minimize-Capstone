@@ -1,6 +1,8 @@
 from flask import Flask, render_template, flash, redirect, url_for, session, request
 # print("Top of routes.py")
 from Minimize import app, bcrypt, db
+import uuid
+import os
 # print("After app import in routes.py")
 from Minimize.forms import RegistrationForm, LoginForm, IntroduceYourselfForm, YourHabitsForm, UpdateAccountForm
 from Minimize.models import User, User_Socials, User_Habits
@@ -11,6 +13,9 @@ from config import Config
 
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://pgauser:hs@localhost:5432/minimize-db'
 print(f"inside route app instance {id(app)}")
+
+if not os.path.exists(app.config['PRO_PIC_UPLOAD_FOLDER']):
+    os.makedirs(app.config['PRO_PIC_UPLOAD_FOLDER'])
 # db = SQLAlchemy(app)
 @app.route('/')
 def index():
@@ -38,8 +43,24 @@ def introduceyourself():
     if form.validate_on_submit():
         session['instagram_handle'] = form.instagram_handle.data
         session['snapchat_handle'] = form.snapchat_handle.data
-        session['profile_picture'] = form.profile_picture.data
         session['short_bio'] = form.short_bio.data
+        profile_picture = form.profile_picture.data
+        if profile_picture:
+            # Generate a unique filename with UUID
+            file_extension = profile_picture.filename.rsplit('.', 1)[1].lower()
+            unique_filename = f"{uuid.uuid4().hex}.{file_extension}"
+
+            # Save the file to the upload folder
+            file_path = os.path.join(app.config['PRO_PIC_UPLOAD_FOLDER'], unique_filename)
+            profile_picture.save(file_path)
+
+            # Store only the filename in session (NOT the file object)
+            session['profile_picture'] = unique_filename
+        else:
+            session['profile_picture'] = 'default.jpeg'  # Default image if none is uploaded
+
+        flash("Socials saved! Now let's record your habits.", "success")
+
 
         flash("Socials saved! Now let's record your habits.", "success")
         return redirect(url_for('yourhabits'))  # Move to habits form
