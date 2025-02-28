@@ -22,6 +22,7 @@ class User(db.Model, UserMixin):
     # One-to-One Relationship with User_Socials and User_Habits
     socials = db.relationship('User_Socials', back_populates='user', uselist=False, cascade="all, delete-orphan")
     habits = db.relationship('User_Habits', back_populates='user', uselist=False, cascade="all, delete-orphan")
+    items = db.relationship('User_Items', back_populates='user', cascade="all, delete-orphan")
 
 class User_Socials(db.Model):
     __tablename__ = 'user_socials'
@@ -49,3 +50,19 @@ class User_Habits(db.Model):
 
     def __repr__(self):
         return f"User_Habits('{self.sleep}', '{self.cleanliness}', '{self.relationship}')"
+
+class User_Items(db.Model):
+    __tablename__ = 'user_items'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)  # Foreign key to User
+    item_name = db.Column(db.String(100), nullable=False)  # Name of the item
+    item_image = db.Column(db.String(100), nullable=True, default='default.jpeg')  # Image of the item
+    description = db.Column(db.Text, nullable=True)  # Description of the item
+    is_sharable = db.Column(db.Boolean, default=False, nullable=False)  # Shareable flag
+    date_added = db.Column(db.DateTime, default=datetime.utcnow)  # Timestamp
+
+    # Relationship back to User
+    user = db.relationship('User', back_populates='items')
+
+    def __repr__(self):
+        return f"User_Items('{self.item_name}', Shareable: {self.is_sharable})"

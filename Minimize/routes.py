@@ -4,8 +4,8 @@ from Minimize import app, bcrypt, db
 import uuid
 import os
 # print("After app import in routes.py")
-from Minimize.forms import RegistrationForm, LoginForm, IntroduceYourselfForm, YourHabitsForm, UpdateAccountForm
-from Minimize.models import User, User_Socials, User_Habits
+from Minimize.forms import RegistrationForm, LoginForm, IntroduceYourselfForm, YourHabitsForm, UpdateAccountForm, ItemForm
+from Minimize.models import User, User_Socials, User_Habits, User_Items
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, login_user, current_user, logout_user, login_required
 from config import Config
@@ -16,6 +16,9 @@ print(f"inside route app instance {id(app)}")
 
 if not os.path.exists(app.config['PRO_PIC_UPLOAD_FOLDER']):
     os.makedirs(app.config['PRO_PIC_UPLOAD_FOLDER'])
+
+if not os.path.exists(app.config['ITEM_UPLOAD_FOLDER']):
+    os.makedirs(app.config['ITEM_UPLOAD_FOLDER'])
 # db = SQLAlchemy(app)
 @app.route('/')
 def index():
@@ -186,8 +189,15 @@ def updateprofile():
             print("User Socials Exist and we are inside the if statement")
             user_socials.instagram_handle = form.instagram_handle.data
             user_socials.snapchat_handle = form.snapchat_handle.data
-            user_socials.profile_picture = form.profile_picture.data
             user_socials.short_bio = form.short_bio.data
+            profile_picture = form.profile_picture.data
+            file_extension = profile_picture.filename.rsplit('.', 1)[1].lower()
+            unique_filename = f"{uuid.uuid4().hex}.{file_extension}"
+
+            file_path = os.path.join(app.config['PRO_PIC_UPLOAD_FOLDER'], unique_filename)
+            profile_picture.save(file_path)
+            user_socials.profile_picture = unique_filename
+
         print(f'User Socials: {user_socials}')
         if user_habits:
             user_habits.sleep = form.sleep.data
@@ -196,7 +206,7 @@ def updateprofile():
         print(f"User Habits: {user_habits}")
         db.session.commit()
         flash('Profile updated successfully!', 'success')
-        return redirect(url_for('updateprofile'))
+        return redirect(url_for('profileupdated'))
     return render_template('updateprofile.html', title='Update Profile', form=form)
 
 @app.route('/myitems')
@@ -213,3 +223,40 @@ def mygroups():
 @login_required
 def profileupdated():
     return render_template('profileupdated.html', user=current_user)
+
+@app.route('/myitems')
+@login_required
+def myitems():
+    return render_template('myitems.html', title='Items', user=current_user)
+
+@app.route('/add_item', methods=['GET', 'POST'])
+@login_required
+def add_item():
+    form = ItemForm()
+
+    if form.validate_on_submit():
+        # Handle file upload
+        if form.item_image.data:
+            file_extension = form.item_image.data.filename.rsplit('.', 1)[1].lower()
+            unique_filename = f"{uuid.uuid4().hex}.{file_extension}"
+            file_path = os.path.join(app.static_folder, 'item_images', unique_filename)
+            form.item_image.data.save(file_path)
+        else:
+            unique_filename = 'default.jpeg'  # Default item image
+
+        # Create new item record
+        new_item = User_Items(
+            user_id=current_user.id,
+            item_name=form.item_name.data,
+            item_image=unique_filename,
+            description=form.description.data,
+            is_sharable=form.is_sharable.data
+        )
+
+        db.session.add(new_item)
+        db.session.commit()
+
+        flash('Item added successfully!', 'success')
+        return redirect(url_for('dashboard'))  # Change to your desired redirect page
+
+    return render_template('add_item.html', form=form)

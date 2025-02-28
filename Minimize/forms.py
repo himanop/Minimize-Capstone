@@ -51,6 +51,13 @@ class UpdateAccountForm(FlaskForm):
     # confirm_password = PasswordField("Confirm Password", validators=[DataRequired(), EqualTo('password')], render_kw={"placeholder": "Confirm New Password"})
     submit = SubmitField('Update Profile')
 
+class ItemForm(FlaskForm):
+    item_name = StringField('Item Name', validators=[DataRequired(), Length(max=100)])
+    item_image = FileField('Item Image', validators=[FileAllowed(['jpg', 'jpeg', 'png'], 'Images only!')])
+    description = TextAreaField('Description', validators=[Length(max=500)])
+    is_sharable = BooleanField('Is this item sharable?')
+    submit = SubmitField('Add Item')
+
 class LoginForm(FlaskForm):
     #The code below for the email might need to change because the field is different...
     username = StringField('username', validators=[DataRequired()])

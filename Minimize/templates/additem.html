@@ -1,0 +1,8 @@
+<form method="POST" enctype="multipart/form-data">
+    {{ form.hidden_tag() }}
+    <p>{{ form.item_name.label }} {{ form.item_name() }}</p>
+    <p>{{ form.item_image.label }} {{ form.item_image() }}</p>
+    <p>{{ form.description.label }} {{ form.description() }}</p>
+    <p>{{ form.is_sharable() }} {{ form.is_sharable.label }}</p>
+    <p>{{ form.submit() }}</p>
+</form>

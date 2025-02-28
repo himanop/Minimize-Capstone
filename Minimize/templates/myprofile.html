@@ -13,7 +13,10 @@
         <h2>Social Media</h2>
         <p>Instagram: {{ user_socials.instagram_handle }}</p>
         <p>Snapchat: {{ user_socials.snapchat_handle }}</p>
-        <img src="{{ url_for('static', filename='profile_pics/' + user_socials.profile_picture) }}" alt="Profile Picture">
+        <!-- <img src="{{ url_for('static', filename='profile_pics/' + user_socials.profile_picture) }}" alt="Profile Picture"> -->
+        <img src="{{ url_for('static', filename='profile_pics/' + user_socials.profile_picture) }}" 
+        alt="Profile Picture" 
+        style="width: 150px; height: 150px; border-radius: 50%;">
         <p>Bio: {{ user_socials.short_bio }}</p>
     {% else %}
         <p>No social media information available.</p>
