@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Update Item</title>
+</head>
+<body>
+    <h1>Update Item</h1>
+    
+    <form method="POST" enctype="multipart/form-data">
+        {{ form.hidden_tag() }}
+        
+        <p>{{ form.item_name.label }} {{ form.item_name() }}</p>
+        <p>{{ form.description.label }} {{ form.description() }}</p>
+        <p>{{ form.is_sharable() }} {{ form.is_sharable.label }}</p>
+        <p>{{ form.item_image.label }} {{ form.item_image() }}</p>
+        
+        <button type="submit">Update Item</button>
+    </form>
+
+    <br>
+    <a href="{{ url_for('myitems') }}">Cancel</a>
+</body>
+</html>

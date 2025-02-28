@@ -209,11 +209,6 @@ def updateprofile():
         return redirect(url_for('profileupdated'))
     return render_template('updateprofile.html', title='Update Profile', form=form)
 
-@app.route('/myitems')
-@login_required
-def myitems():
-    return render_template('myitems.html', title='Items')
-
 @app.route('/mygroups')
 @login_required
 def mygroups():
@@ -229,7 +224,7 @@ def profileupdated():
 def myitems():
     return render_template('myitems.html', title='Items', user=current_user)
 
-@app.route('/add_item', methods=['GET', 'POST'])
+@app.route('/myitems/add_item', methods=['GET', 'POST'])
 @login_required
 def add_item():
     form = ItemForm()
@@ -239,7 +234,7 @@ def add_item():
         if form.item_image.data:
             file_extension = form.item_image.data.filename.rsplit('.', 1)[1].lower()
             unique_filename = f"{uuid.uuid4().hex}.{file_extension}"
-            file_path = os.path.join(app.static_folder, 'item_images', unique_filename)
+            file_path = os.path.join(app.static_folder, 'item_pics', unique_filename)
             form.item_image.data.save(file_path)
         else:
             unique_filename = 'default.jpeg'  # Default item image
@@ -259,4 +254,35 @@ def add_item():
         flash('Item added successfully!', 'success')
         return redirect(url_for('dashboard'))  # Change to your desired redirect page
 
-    return render_template('add_item.html', form=form)
+    return render_template('additem.html', form=form)
+
+@app.route('/myitems/update/<int:item_id>', methods=['GET', 'POST'])
+@login_required
+def update_item(item_id):
+    item = User_Items.query.get_or_404(item_id)
+
+    # Ensure only the item owner can edit it
+    if item.user_id != current_user.id:
+        flash("You don't have permission to update this item.", "danger")
+        return redirect(url_for('myitems'))
+
+    form = ItemForm(obj=item)
+
+    if form.validate_on_submit():
+        item.item_name = form.item_name.data
+        item.description = form.description.data
+        item.is_sharable = form.is_sharable.data
+
+        # Handle image update
+        if form.item_image.data:
+            file_extension = form.item_image.data.filename.rsplit('.', 1)[1].lower()
+            unique_filename = f"{uuid.uuid4().hex}.{file_extension}"
+            file_path = os.path.join(app.static_folder, 'item_pics', unique_filename)
+            form.item_image.data.save(file_path)
+            item.item_image = unique_filename  # Update the image filename
+
+        db.session.commit()
+        flash('Item updated successfully!', 'success')
+        return redirect(url_for('myitems'))
+
+    return render_template('updateitem.html', form=form, item=item)

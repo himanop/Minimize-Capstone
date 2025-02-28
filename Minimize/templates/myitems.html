@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ title }}</title>
+</head>
+<body>
+    <h1>My Items</h1>
+
+    <!-- Add Item Button -->
+    <a href="{{ url_for('add_item') }}">
+        <button style="padding: 10px 20px; font-size: 16px;">Add New Item</button>
+    </a>
+
+    <!-- Display Items (if any) -->
+    {% if user.items %}
+        <h2>Your Items</h2>
+        <ul>
+            {% for item in user.items %}
+                <li>
+                    <img src="{{ url_for('static', filename='item_pics/' + item.item_image) }}" 
+                         alt="Item Image" 
+                         style="width: 100px; height: 100px; object-fit: cover;">
+                    <strong>{{ item.item_name }}</strong> - {{ item.description }}
+                    {% if item.is_sharable %}
+                        <span style="color: green;">(Willing to share)</span>
+                    {% else %}
+                        <span style="color: red;">(Not Sharable)</span>
+                    {% endif %}
+                    
+                    <!-- Update Item Button -->
+                    <a href="{{ url_for('update_item', item_id=item.id) }}">
+                        <button style="margin-left: 10px; padding: 5px 10px; font-size: 14px;">Update</button>
+                    </a>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>You have no items yet.</p>
+    {% endif %}
+</body>
+</html>
