@@ -1,6 +1,15 @@
-<h1>Welcome {{user.first_name}}</h1>
+<h1>Welcome {{ user.first_name }}</h1>
 <h3>This is the dashboard</h3>
-<a href="{{url_for('myprofile')}}" class="link active">My Profile</a>
-<a href="{{url_for('myitems')}}" class="link active">My Items</a>
-<a href="{{url_for('mygroups')}}" class="link active">My Groups</a>
-<a href="{{url_for('signout')}}" class="link active">Signout</a>
+
+<!-- Navigation Links -->
+<a href="{{ url_for('myprofile') }}" class="link active">My Profile</a>
+<a href="{{ url_for('myitems') }}" class="link active">My Items</a>
+<a href="{{ url_for('mygroups') }}" class="link active">My Groups</a>
+<a href="{{ url_for('signout') }}" class="link active">Signout</a>
+
+<!-- Search for Users -->
+<h3>Search for a User</h3>
+<form action="{{ url_for('search') }}" method="POST">
+    <input type="text" name="username" placeholder="Enter username" required>
+    <button type="submit">Search</button>
+</form>

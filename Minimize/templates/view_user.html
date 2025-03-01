@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>{{ title }}</title>
+    <title>{{ user.first_name }} {{ user.last_name }}'s Profile</title>
 </head>
-<a href="{{url_for('dashboard')}}" class="link active">Back to Dashboard</a>
 <body>
-    <h1>Welcome, {{ user.first_name }} {{ user.last_name }}!</h1>
+    <a href="{{url_for('dashboard')}}" class="link active">Back my Dashboard</a>
+    <h1>{{ user.first_name }} {{ user.last_name }}'s Profile</h1>
     <p>Username: {{ user.username }}</p>
     <p>Email: {{ user.email }}</p>
 
@@ -30,8 +30,5 @@
     {% else %}
         <p>No habit information available.</p>
     {% endif %}
-    <form action="{{ url_for('updateprofile') }}" method="get">
-        <button type="submit">Update</button>
-    </form>
 </body>
 </html>

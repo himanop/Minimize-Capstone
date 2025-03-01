@@ -11,11 +11,11 @@
         <button style="padding: 10px 20px; font-size: 16px;">Add New Item</button>
     </a>
 
-    <!-- Display Items (if any) -->
-    {% if user.items %}
+    <!-- Display Items -->
+    {% if paginated_items.items %}
         <h2>Your Items</h2>
         <ul>
-            {% for item in user.items %}
+            {% for item in paginated_items.items %}
                 <li>
                     <img src="{{ url_for('static', filename='item_pics/' + item.item_image) }}" 
                          alt="Item Image" 
@@ -34,6 +34,34 @@
                 </li>
             {% endfor %}
         </ul>
+
+        <!-- Pagination Controls -->
+        <div>
+            {% if paginated_items.has_prev %}
+                <a href="{{ url_for('myitems', page=paginated_items.prev_num) }}">Previous</a>
+            {% else %}
+                <span>Previous</span>
+            {% endif %}
+
+            {% for page_num in paginated_items.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                {% if page_num %}
+                    {% if page_num == paginated_items.page %}
+                        <span><strong>{{ page_num }}</strong></span>
+                    {% else %}
+                        <a href="{{ url_for('myitems', page=page_num) }}">{{ page_num }}</a>
+                    {% endif %}
+                {% else %}
+                    <span>...</span>
+                {% endif %}
+            {% endfor %}
+
+            {% if paginated_items.has_next %}
+                <a href="{{ url_for('myitems', page=paginated_items.next_num) }}">Next</a>
+            {% else %}
+                <span>Next</span>
+            {% endif %}
+        </div>
+
     {% else %}
         <p>You have no items yet.</p>
     {% endif %}

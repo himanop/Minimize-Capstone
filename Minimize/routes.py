@@ -222,7 +222,36 @@ def profileupdated():
 @app.route('/myitems')
 @login_required
 def myitems():
-    return render_template('myitems.html', title='Items', user=current_user)
+    page = request.args.get('page', 1, type=int)  # Get the current page number, default is 1
+    per_page = 5  # Number of items per page
+
+    # Fetch paginated items for the current user
+    paginated_items = User_Items.query.filter_by(user_id=current_user.id).paginate(page=page, per_page=per_page, error_out=False)
+
+    return render_template('myitems.html', title='Items', user=current_user, paginated_items=paginated_items)
+
+
+@app.route('/search', methods=['GET', 'POST'])
+@login_required
+def search():
+    search_results = None  # Default to None if no search is performed
+
+    if request.method == 'POST':
+        search_query = request.form.get('username', '').strip()  # Get input and remove extra spaces
+
+        if search_query:
+            search_results = User.query.filter(User.username.ilike(f"%{search_query}%")).all()  # Case-insensitive search
+
+    return render_template('search.html', search_results=search_results)
+
+@app.route('/user/<int:user_id>')
+@login_required
+def view_user(user_id):
+    user = User.query.get_or_404(user_id)  # Fetch user or return 404
+    user_socials = User_Socials.query.filter_by(user_id=user_id).first()
+    user_habits = User_Habits.query.filter_by(user_id=user_id).first()
+    return render_template('view_user.html', user=user, user_socials=user_socials, user_habits=user_habits)
+
 
 @app.route('/myitems/add_item', methods=['GET', 'POST'])
 @login_required
@@ -252,7 +281,7 @@ def add_item():
         db.session.commit()
 
         flash('Item added successfully!', 'success')
-        return redirect(url_for('dashboard'))  # Change to your desired redirect page
+        return redirect(url_for('myitems'))  # Change to your desired redirect page
 
     return render_template('additem.html', form=form)
 
