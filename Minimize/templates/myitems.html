@@ -4,16 +4,18 @@
     <title>{{ title }}</title>
 </head>
 <body>
-    <h1>My Items</h1>
+    <h1>{{ user.first_name }}'s Items</h1>
 
-    <!-- Add Item Button -->
-    <a href="{{ url_for('add_item') }}">
-        <button style="padding: 10px 20px; font-size: 16px;">Add New Item</button>
-    </a>
+    <!-- Add Item Button (Only Show If Viewing Your Own Items) -->
+    {% if user.id == current_user.id %}
+        <a href="{{ url_for('add_item') }}">
+            <button style="padding: 10px 20px; font-size: 16px;">Add New Item</button>
+        </a>
+    {% endif %}
 
     <!-- Display Items -->
     {% if paginated_items.items %}
-        <h2>Your Items</h2>
+        <h2>Items List</h2>
         <ul>
             {% for item in paginated_items.items %}
                 <li>
@@ -27,10 +29,12 @@
                         <span style="color: red;">(Not Sharable)</span>
                     {% endif %}
                     
-                    <!-- Update Item Button -->
-                    <a href="{{ url_for('update_item', item_id=item.id) }}">
-                        <button style="margin-left: 10px; padding: 5px 10px; font-size: 14px;">Update</button>
-                    </a>
+                    <!-- Update Item Button (Only Show If User Owns the Item) -->
+                    {% if user.id == current_user.id %}
+                        <a href="{{ url_for('update_item', item_id=item.id) }}">
+                            <button style="margin-left: 10px; padding: 5px 10px; font-size: 14px;">Update</button>
+                        </a>
+                    {% endif %}
                 </li>
             {% endfor %}
         </ul>
@@ -38,7 +42,7 @@
         <!-- Pagination Controls -->
         <div>
             {% if paginated_items.has_prev %}
-                <a href="{{ url_for('myitems', page=paginated_items.prev_num) }}">Previous</a>
+                <a href="{{ url_for('myitems', page=paginated_items.prev_num, user_id=user.id) }}">Previous</a>
             {% else %}
                 <span>Previous</span>
             {% endif %}
@@ -48,7 +52,7 @@
                     {% if page_num == paginated_items.page %}
                         <span><strong>{{ page_num }}</strong></span>
                     {% else %}
-                        <a href="{{ url_for('myitems', page=page_num) }}">{{ page_num }}</a>
+                        <a href="{{ url_for('myitems', page=page_num, user_id=user.id) }}">{{ page_num }}</a>
                     {% endif %}
                 {% else %}
                     <span>...</span>
@@ -56,14 +60,18 @@
             {% endfor %}
 
             {% if paginated_items.has_next %}
-                <a href="{{ url_for('myitems', page=paginated_items.next_num) }}">Next</a>
+                <a href="{{ url_for('myitems', page=paginated_items.next_num, user_id=user.id) }}">Next</a>
             {% else %}
                 <span>Next</span>
             {% endif %}
         </div>
 
     {% else %}
-        <p>You have no items yet.</p>
+        <p>This user has no items.</p>
     {% endif %}
+
+    <br>
+    <a href="{{ url_for('view_user', user_id=user.id) }}">Back to {{ user.first_name }}'s Profile</a>
 </body>
 </html>
+

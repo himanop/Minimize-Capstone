@@ -4,7 +4,8 @@
     <title>{{ user.first_name }} {{ user.last_name }}'s Profile</title>
 </head>
 <body>
-    <a href="{{url_for('dashboard')}}" class="link active">Back my Dashboard</a>
+    <a href="{{ url_for('dashboard') }}" class="link active">Back to My Dashboard</a>
+
     <h1>{{ user.first_name }} {{ user.last_name }}'s Profile</h1>
     <p>Username: {{ user.username }}</p>
     <p>Email: {{ user.email }}</p>
@@ -13,10 +14,9 @@
         <h2>Social Media</h2>
         <p>Instagram: {{ user_socials.instagram_handle }}</p>
         <p>Snapchat: {{ user_socials.snapchat_handle }}</p>
-        <!-- <img src="{{ url_for('static', filename='profile_pics/' + user_socials.profile_picture) }}" alt="Profile Picture"> -->
         <img src="{{ url_for('static', filename='profile_pics/' + user_socials.profile_picture) }}" 
-        alt="Profile Picture" 
-        style="width: 150px; height: 150px; border-radius: 50%;">
+             alt="Profile Picture" 
+             style="width: 150px; height: 150px; border-radius: 50%;">
         <p>Bio: {{ user_socials.short_bio }}</p>
     {% else %}
         <p>No social media information available.</p>
@@ -30,5 +30,11 @@
     {% else %}
         <p>No habit information available.</p>
     {% endif %}
+
+    <!-- Button to View User's Items -->
+    <a href="{{ url_for('myitems', user_id=user.id) }}">
+        <button>View {{ user.first_name }}'s Items</button>
+    </a>
+
 </body>
 </html>

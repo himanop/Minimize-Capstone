@@ -224,11 +224,18 @@ def profileupdated():
 def myitems():
     page = request.args.get('page', 1, type=int)  # Get the current page number, default is 1
     per_page = 5  # Number of items per page
+    user_id = request.args.get('user_id', type=int)  # Get user_id from query params
 
-    # Fetch paginated items for the current user
-    paginated_items = User_Items.query.filter_by(user_id=current_user.id).paginate(page=page, per_page=per_page, error_out=False)
+    # Determine which user's items to show
+    if user_id:
+        user = User.query.get_or_404(user_id)  # Fetch the specified user
+    else:
+        user = current_user  # Default to the logged-in user
 
-    return render_template('myitems.html', title='Items', user=current_user, paginated_items=paginated_items)
+    # Fetch paginated items for the selected user
+    paginated_items = User_Items.query.filter_by(user_id=user.id).paginate(page=page, per_page=per_page, error_out=False)
+
+    return render_template('myitems.html', title=f"{user.first_name}'s Items", user=user, paginated_items=paginated_items)
 
 
 @app.route('/search', methods=['GET', 'POST'])
