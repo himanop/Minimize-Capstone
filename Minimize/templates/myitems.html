@@ -71,7 +71,7 @@
     {% endif %}
 
     <br>
-    <a href="{{ url_for('view_user', user_id=user.id) }}">Back to {{ user.first_name }}'s Profile</a>
+    <a href="{{ url_for('dashboard', user_id=user.id) }}">Back to my Dashboard</a>
 </body>
 </html>
 
