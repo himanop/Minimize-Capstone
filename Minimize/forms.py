@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, TextAreaField, URLField, BooleanField, EmailField, FileField, DateField, SubmitField, SelectField
+from wtforms import StringField, PasswordField, TextAreaField, URLField, BooleanField, EmailField, FileField, DateField, SubmitField, SelectField, SelectMultipleField
 from flask_wtf.file import FileAllowed, FileRequired, FileField
 from wtforms.validators import DataRequired, Length, EqualTo, ValidationError
 from Minimize.models import User, User_Socials, User_Habits
@@ -64,3 +64,12 @@ class LoginForm(FlaskForm):
     password = PasswordField('password', validators=[DataRequired()])
     remember = BooleanField('remember me')
     submit = SubmitField('Login')
+
+class CreateGroupForm(FlaskForm):
+    group_name = StringField('Group Name', validators=[DataRequired()])
+    profile_picture = FileField('Profile Picture', validators=[FileAllowed(['jpg', 'jpeg', 'png'], 'Images only!')])
+    address = StringField('Address', validators=[DataRequired()])
+    search_username = StringField('Search Username')  # New field for searching users
+    members = SelectMultipleField('Select Users to Add', coerce=int)  # Checkbox for users
+    submit_search = SubmitField('Search')  # Search button
+    submit = SubmitField('Create Group')

@@ -4,8 +4,8 @@ from Minimize import app, bcrypt, db
 import uuid
 import os
 # print("After app import in routes.py")
-from Minimize.forms import RegistrationForm, LoginForm, IntroduceYourselfForm, YourHabitsForm, UpdateAccountForm, ItemForm
-from Minimize.models import User, User_Socials, User_Habits, User_Items
+from Minimize.forms import RegistrationForm, LoginForm, IntroduceYourselfForm, YourHabitsForm, UpdateAccountForm, ItemForm, CreateGroupForm
+from Minimize.models import User, User_Socials, User_Habits, User_Items, Group
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, login_user, current_user, logout_user, login_required
 from config import Config
@@ -19,6 +19,9 @@ if not os.path.exists(app.config['PRO_PIC_UPLOAD_FOLDER']):
 
 if not os.path.exists(app.config['ITEM_UPLOAD_FOLDER']):
     os.makedirs(app.config['ITEM_UPLOAD_FOLDER'])
+
+if not os.path.exists(app.config['GROUP_PIC_UPLOAD_FOLDER']):
+    os.makedirs(app.config['GROUP_PIC_UPLOAD_FOLDER'])
 # db = SQLAlchemy(app)
 @app.route('/')
 def index():
@@ -209,11 +212,6 @@ def updateprofile():
         return redirect(url_for('profileupdated'))
     return render_template('updateprofile.html', title='Update Profile', form=form)
 
-@app.route('/mygroups')
-@login_required
-def mygroups():
-    return render_template('mygroups.html', title='Groups')
-
 @app.route('/profileupdated')
 @login_required
 def profileupdated():
@@ -322,3 +320,148 @@ def update_item(item_id):
         return redirect(url_for('myitems'))
 
     return render_template('updateitem.html', form=form, item=item)
+
+@app.route('/mygroups', methods=['GET', 'POST'])
+@login_required
+def mygroups():
+    return render_template('mygroups.html', title='Groups', user=current_user)
+
+@app.route('/creategroup', methods=['GET', 'POST'])
+@login_required
+def creategroup():
+    form = CreateGroupForm()
+
+    # Ensure choices are always set before rendering the form
+    form.members.choices = []  # Default empty choices to prevent "NoneType" error
+
+    selected_users = []  # Store selected members between searches
+
+    # Preserve previously selected members from form submission
+    selected_user_ids = request.form.getlist('selected_users')
+    if selected_user_ids:
+        selected_users = User.query.filter(User.id.in_(selected_user_ids)).all()
+
+    # If searching for users
+    if 'submit_search' in request.form:
+        search_query = form.search_username.data.strip()
+
+        # Perform new search
+        if search_query:
+            found_users = User.query.filter(User.username.ilike(f"%{search_query}%")).all()
+        else:
+            found_users = []
+
+        # Merge previous selections and new search results
+        all_users = {user.id: f"{user.first_name} {user.last_name} (@{user.username})" for user in selected_users + found_users}
+        form.members.choices = list(all_users.items())
+
+    # If adding a user to the selection
+    elif 'add_user' in request.form:
+        new_user_id = request.form.get('new_user_id')
+        if new_user_id and new_user_id not in selected_user_ids:
+            selected_user_ids.append(new_user_id)
+            selected_users = User.query.filter(User.id.in_(selected_user_ids)).all()
+
+    # If creating the group
+    elif form.validate_on_submit() and 'submit' in request.form:
+        # Handle profile picture upload
+        if form.profile_picture.data:
+            file_extension = form.profile_picture.data.filename.rsplit('.', 1)[1].lower()
+            unique_filename = f"{uuid.uuid4().hex}.{file_extension}"
+            file_path = os.path.join(app.config['PRO_PIC_UPLOAD_FOLDER'], unique_filename)
+            form.profile_picture.data.save(file_path)
+        else:
+            unique_filename = 'default_group.jpg'  # Default group image
+
+        # Create the new group
+        new_group = Group(
+            group_name=form.group_name.data,
+            profile_picture=unique_filename,
+            address=form.address.data
+        )
+        new_group.members.append(current_user)  # Add the creator to the group
+
+        # Add selected users
+        for user_id in selected_user_ids:
+            user = User.query.get(user_id)
+            if user:
+                new_group.members.append(user)
+
+        db.session.add(new_group)
+        db.session.commit()
+
+        flash(f'Group "{form.group_name.data}" created successfully!', 'success')
+        return redirect(url_for('view_group', group_id=new_group.id))
+
+    return render_template('creategroup.html', form=form, selected_users=selected_users)
+
+
+@app.route('/group/<int:group_id>')
+@login_required
+def view_group(group_id):
+    group = Group.query.get_or_404(group_id)
+
+    # Check if the current user is a member of the group
+    if current_user not in group.members:
+        flash("You are not a member of this group.", "danger")
+        return redirect(url_for('mygroups'))
+
+    return render_template('viewgroup.html', group=group)
+
+@app.route('/leave_group/<int:group_id>', methods=['POST'])
+@login_required
+def leave_group(group_id):
+    group = Group.query.get_or_404(group_id)
+
+    # Ensure the user is in the group
+    if current_user in group.members:
+        group.members.remove(current_user)
+        db.session.commit()
+        flash(f'You have left the group "{group.group_name}".', 'success')
+    else:
+        flash('You are not a member of this group.', 'danger')
+
+    return redirect(url_for('mygroups'))
+
+@app.route('/delete_group/<int:group_id>', methods=['GET', 'POST'])
+@login_required
+def delete_group(group_id):
+    group = Group.query.get_or_404(group_id)
+
+    # Ensure only the creator (first member) can delete the group
+    if current_user != group.members[0]:
+        flash("You are not authorized to delete this group.", "danger")
+        return redirect(url_for('view_group', group_id=group.id))
+
+    if request.method == 'POST':
+        db.session.delete(group)
+        db.session.commit()
+        flash(f'Group "{group.group_name}" has been deleted.', 'success')
+        return redirect(url_for('mygroups'))
+
+    return render_template('deletegroup.html', group=group)
+
+@app.route('/add_member/<int:group_id>', methods=['POST'])
+@login_required
+def add_member(group_id):
+    group = Group.query.get_or_404(group_id)
+
+    # Ensure only the group creator can add members
+    if current_user != group.members[0]:
+        flash("You are not authorized to add members to this group.", "danger")
+        return redirect(url_for('view_group', group_id=group.id))
+
+    username = request.form.get('username').strip()
+    user_to_add = User.query.filter_by(username=username).first()
+
+    if user_to_add:
+        if user_to_add in group.members:
+            flash(f"{username} is already in the group.", "warning")
+        else:
+            group.members.append(user_to_add)
+            db.session.commit()
+            flash(f"{username} has been added to the group!", "success")
+    else:
+        flash("User not found.", "danger")
+
+    return redirect(url_for('view_group', group_id=group.id))

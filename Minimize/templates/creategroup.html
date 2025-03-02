@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Create a Group</title>
+</head>
+<body>
+
+    <h1>Create a New Group</h1>
+    <a href="{{ url_for('dashboard') }}">Back to Dashboard</a>
+
+    <!-- Search for Users -->
+    <form method="POST">
+        {{ form.hidden_tag() }}
+        
+        <p>
+            {{ form.search_username.label }} <br>
+            {{ form.search_username(size=30) }}
+            <button type="submit" name="submit_search">Search</button>
+        </p>
+
+        <!-- Preserve selected users -->
+        {% for user in selected_users %}
+            <input type="hidden" name="selected_users" value="{{ user.id }}">
+        {% endfor %}
+    </form>
+
+    <!-- Display Search Results -->
+    {% if form.members.choices %}
+        <h3>Search Results:</h3>
+        <ul>
+            {% for value, label in form.members.choices %}
+                <li>
+                    {{ label }} <!-- Displays "First Last (@username)" -->
+                    <form method="POST" style="display:inline;">
+                        {{ form.hidden_tag() }}
+                        <input type="hidden" name="new_user_id" value="{{ value }}">
+                        <input type="hidden" name="search_username" value="{{ form.search_username.data }}">
+                        {% for user in selected_users %}
+                            <input type="hidden" name="selected_users" value="{{ user.id }}">
+                        {% endfor %}
+                        <button type="submit" name="add_user">Add</button>
+                    </form>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No users found. Try searching for a username.</p>
+    {% endif %}
+
+    <!-- Group Creation Form -->
+    <form method="POST" enctype="multipart/form-data">
+        {{ form.hidden_tag() }}
+
+        <!-- Group Name -->
+        <p>
+            {{ form.group_name.label }} <br>
+            {{ form.group_name(size=30) }}
+        </p>
+
+        <!-- Profile Picture Upload -->
+        <p>
+            {{ form.profile_picture.label }} <br>
+            {{ form.profile_picture() }}
+        </p>
+
+        <!-- Group Address -->
+        <p>
+            {{ form.address.label }} <br>
+            {{ form.address(size=50) }}
+        </p>
+
+        <!-- Display Selected Members Before Submission -->
+        {% if selected_users %}
+            <h3>Selected Members:</h3>
+            <ul>
+                {% for user in selected_users %}
+                    <li>{{ user.first_name }} {{ user.last_name }} (@{{ user.username }})</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        <!-- Submit Button -->
+        <p>{{ form.submit() }}</p>
+    </form>
+
+</body>
+</html>
+
+
+

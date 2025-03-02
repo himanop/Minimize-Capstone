@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ group.group_name }}</title>
+</head>
+<body>
+
+    <h1>{{ group.group_name }}</h1>
+    <img src="{{ url_for('static', filename='group_pics/' + group.profile_picture) }}" 
+         alt="Group Profile Picture" 
+         style="width: 150px; height: 150px; border-radius: 50%;">
+    
+    <p><strong>Address:</strong> {{ group.address }}</p>
+
+    <h2>Members</h2>
+    <ul>
+        {% for member in group.members %}
+            <li>{{ member.first_name }} {{ member.last_name }} (@{{ member.username }})</li>
+        {% endfor %}
+    </ul>
+
+    <!-- Leave Group Button -->
+    {% if current_user in group.members %}
+        <form method="POST" action="{{ url_for('leave_group', group_id=group.id) }}">
+            <button type="submit" style="background-color: red; color: white;">Leave Group</button>
+        </form>
+    {% endif %}
+
+    <!-- Delete Group Button (Only for Creator) -->
+    {% if current_user == group.members[0] %}
+        <a href="{{ url_for('delete_group', group_id=group.id) }}">
+            <button style="background-color: black; color: white;">Delete Group</button>
+        </a>
+    {% endif %}
+
+    <br><br>
+
+    <!-- Add New Member (Only for Group Creator) -->
+    {% if current_user == group.members[0] %}
+        <h2>Add Member to Group</h2>
+        <form method="POST" action="{{ url_for('add_member', group_id=group.id) }}">
+            <label for="username">Enter Username:</label>
+            <input type="text" name="username" required>
+            <button type="submit">Add Member</button>
+        </form>
+    {% endif %}
+
+    <br>
+    <a href="{{ url_for('mygroups') }}">Back to My Groups</a>
+
+</body>
+</html>
+

@@ -9,6 +9,22 @@ from flask_login import UserMixin
 def load_user(user_id):
     return User.query.get(int(user_id))
 
+group_membership = db.Table('group_membership',
+    db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
+    db.Column('group_id', db.Integer, db.ForeignKey('groups.id'), primary_key=True)
+)
+
+class Group(db.Model):
+    __tablename__ = 'groups'
+    id = db.Column(db.Integer, primary_key=True)
+    group_name = db.Column(db.String(100), unique=True, nullable=False)
+    profile_picture = db.Column(db.String(100), nullable=True, default='default_group.jpg')
+    address = db.Column(db.String(255), nullable=False)
+    date_created = db.Column(db.DateTime, default=datetime.utcnow)
+
+    # Many-to-Many relationship with users
+    members = db.relationship('User', secondary=group_membership, back_populates='groups')
+
 class User(db.Model, UserMixin):
     __tablename__ = 'user'
     id = db.Column(db.Integer, primary_key=True)
@@ -23,6 +39,7 @@ class User(db.Model, UserMixin):
     socials = db.relationship('User_Socials', back_populates='user', uselist=False, cascade="all, delete-orphan")
     habits = db.relationship('User_Habits', back_populates='user', uselist=False, cascade="all, delete-orphan")
     items = db.relationship('User_Items', back_populates='user', cascade="all, delete-orphan")
+    groups = db.relationship('Group', secondary=group_membership, back_populates='members')
 
 class User_Socials(db.Model):
     __tablename__ = 'user_socials'
