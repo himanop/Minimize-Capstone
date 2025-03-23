@@ -1,11 +1,12 @@
 from flask import Flask, render_template, flash, redirect, url_for, session, request
+from werkzeug.utils import secure_filename
 # print("Top of routes.py")
 from Minimize import app, bcrypt, db
 import uuid
 import os
 # print("After app import in routes.py")
 from Minimize.forms import RegistrationForm, LoginForm, IntroduceYourselfForm, YourHabitsForm, UpdateAccountForm, ItemForm, CreateGroupForm
-from Minimize.models import User, User_Socials, User_Habits, User_Items, Group
+from Minimize.models import User, User_Socials, User_Habits, User_Items, Group, group_membership
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, login_user, current_user, logout_user, login_required
 from config import Config
@@ -23,6 +24,11 @@ if not os.path.exists(app.config['ITEM_UPLOAD_FOLDER']):
 if not os.path.exists(app.config['GROUP_PIC_UPLOAD_FOLDER']):
     os.makedirs(app.config['GROUP_PIC_UPLOAD_FOLDER'])
 # db = SQLAlchemy(app)
+
+def allowed_file(filename):
+    """Check if a file has an allowed extension."""
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in {'jpg', 'jpeg', 'png', 'gif'}
+
 @app.route('/')
 def index():
     return render_template('welcome.html')
@@ -83,7 +89,7 @@ def yourhabits():
         session['cleanliness'] = form.cleanliness.data
         session['relationship'] = form.relationship.data
 
-        hashed_password = bcrypt.generate_password_hash(session.get('password')).decode('utf-8')
+        # hashed_password = bcrypt.generate_password_hash(session.get('password')).decode('utf-8')
 
         # Create and save User
         new_user = User(
@@ -135,11 +141,11 @@ def signin():
     form = LoginForm()
     if form.validate_on_submit():
         user = User.query.filter_by(username=form.username.data).first()
-        print(f"User: {user.username}")
-        print(f"Password: {form.password
-        .data}")
-        print(f'Hash:{user.password_hash}')
-        print(f'{bcrypt.check_password_hash(user.password_hash, form.password.data)}')
+        # print(f"User: {user.username}")
+        # print(f"Password: {form.password
+        # .data}")
+        # print(f'Hash:{user.password_hash}')
+        # print(f'{bcrypt.check_password_hash(user.password_hash, form.password.data)}')
         if user and bcrypt.check_password_hash(user.password_hash, form.password.data):
             login_user(user)
             flash("You have been logged in!", "success")
@@ -172,8 +178,8 @@ def updateprofile():
     user = current_user
     user_socials = User_Socials.query.filter_by(user_id=current_user.id).first()
     user_habits = User_Habits.query.filter_by(user_id=current_user.id).first()
-    print(f"User Socials: {user_socials}")
-    print(f"User Habits: {user_habits}")
+    # print(f"User Socials: {user_socials}")
+    # print(f"User Habits: {user_habits}")
     form_data = {
         "instagram_handle": user_socials.instagram_handle if user_socials else "",
         "snapchat_handle": user_socials.snapchat_handle if user_socials else "",
@@ -183,7 +189,7 @@ def updateprofile():
         "cleanliness": user_habits.cleanliness if user_habits else "",
         "relationship": user_habits.relationship if user_habits else "",
     }
-    print(f"Form Data: {form_data}")
+    # print(f"Form Data: {form_data}")
     form = UpdateAccountForm(data=form_data)
     if form.validate_on_submit():
         print("Form Validated")
@@ -307,13 +313,13 @@ def update_item(item_id):
         item.description = form.description.data
         item.is_sharable = form.is_sharable.data
 
-        # Handle image update
-        if form.item_image.data:
+        # Handle image update correctly
+        if form.item_image.data and hasattr(form.item_image.data, 'filename'):  # Check if a new file was uploaded
             file_extension = form.item_image.data.filename.rsplit('.', 1)[1].lower()
             unique_filename = f"{uuid.uuid4().hex}.{file_extension}"
             file_path = os.path.join(app.static_folder, 'item_pics', unique_filename)
             form.item_image.data.save(file_path)
-            item.item_image = unique_filename  # Update the image filename
+            item.item_image = unique_filename  # Update with new image filename
 
         db.session.commit()
         flash('Item updated successfully!', 'success')
@@ -321,79 +327,88 @@ def update_item(item_id):
 
     return render_template('updateitem.html', form=form, item=item)
 
-@app.route('/mygroups', methods=['GET', 'POST'])
+
+@app.route('/mygroups')
 @login_required
 def mygroups():
-    return render_template('mygroups.html', title='Groups', user=current_user)
+    # Fetch groups created by the current user
+    created_groups = Group.query.filter(Group.members.any(id=current_user.id)).all()
+
+    # Fetch groups the current user is a member of (including those they created)
+    member_groups = current_user.groups
+
+    return render_template('mygroups.html', created_groups=created_groups, member_groups=member_groups)
 
 @app.route('/creategroup', methods=['GET', 'POST'])
 @login_required
 def creategroup():
     form = CreateGroupForm()
 
-    # Ensure choices are always set before rendering the form
-    form.members.choices = []  # Default empty choices to prevent "NoneType" error
+    if request.method == 'POST':
+        if 'submit_search' in request.form:
+            search_query = request.form.get('search_username', '').strip()
+            if search_query:
+                # Search for users by username, first name, or last name
+                users = User.query.filter(
+                    (User.username.ilike(f'%{search_query}%')) |
+                    (User.first_name.ilike(f'%{search_query}%')) |
+                    (User.last_name.ilike(f'%{search_query}%'))
+                ).all()
+                form.members.choices = [(user.id, f"{user.username} ({user.first_name} {user.last_name})") for user in users]
+            else:
+                form.members.choices = []
 
-    selected_users = []  # Store selected members between searches
+        elif 'remove_member' in request.form:
+            user_id = request.form.get('remove_member')
+            members = request.form.getlist('members')
+            if user_id in members:
+                members.remove(user_id)
+            form.members.data = members
 
-    # Preserve previously selected members from form submission
-    selected_user_ids = request.form.getlist('selected_users')
-    if selected_user_ids:
-        selected_users = User.query.filter(User.id.in_(selected_user_ids)).all()
+        elif form.submit.data:
+            group_name = form.group_name.data
+            address = form.address.data
+            member_ids = request.form.get('members', '').split(',')
+            member_ids = [int(id) for id in member_ids if id.strip()]  # Validate member IDs
+            profile_picture = form.profile_picture.data
 
-    # If searching for users
-    if 'submit_search' in request.form:
-        search_query = form.search_username.data.strip()
+            # Check if the group name already exists
+            existing_group = Group.query.filter_by(group_name=group_name).first()
+            if existing_group:
+                flash('Group name already exists!', 'error')
+                return redirect(url_for('creategroup'))
 
-        # Perform new search
-        if search_query:
-            found_users = User.query.filter(User.username.ilike(f"%{search_query}%")).all()
-        else:
-            found_users = []
+            # Handle profile picture upload
+            profile_picture_filename = 'default_group.jpg'
+            if profile_picture and allowed_file(profile_picture.filename):
+                filename = secure_filename(profile_picture.filename)
+                file_path = os.path.join(app.config['GROUP_PIC_UPLOAD_FOLDER'], filename)
+                profile_picture.save(file_path)
+                profile_picture_filename = filename
 
-        # Merge previous selections and new search results
-        all_users = {user.id: f"{user.first_name} {user.last_name} (@{user.username})" for user in selected_users + found_users}
-        form.members.choices = list(all_users.items())
+            # Create a new group
+            new_group = Group(
+                group_name=group_name,
+                address=address,
+                profile_picture=profile_picture_filename
+            )
+            db.session.add(new_group)
+            db.session.commit()
 
-    # If adding a user to the selection
-    elif 'add_user' in request.form:
-        new_user_id = request.form.get('new_user_id')
-        if new_user_id and new_user_id not in selected_user_ids:
-            selected_user_ids.append(new_user_id)
-            selected_users = User.query.filter(User.id.in_(selected_user_ids)).all()
+            # Add the current user as the first member
+            new_group.members.append(current_user)
 
-    # If creating the group
-    elif form.validate_on_submit() and 'submit' in request.form:
-        # Handle profile picture upload
-        if form.profile_picture.data:
-            file_extension = form.profile_picture.data.filename.rsplit('.', 1)[1].lower()
-            unique_filename = f"{uuid.uuid4().hex}.{file_extension}"
-            file_path = os.path.join(app.config['PRO_PIC_UPLOAD_FOLDER'], unique_filename)
-            form.profile_picture.data.save(file_path)
-        else:
-            unique_filename = 'default_group.jpg'  # Default group image
+            # Add selected users to the group
+            for user_id in member_ids:
+                user = User.query.get(user_id)
+                if user:
+                    new_group.members.append(user)
 
-        # Create the new group
-        new_group = Group(
-            group_name=form.group_name.data,
-            profile_picture=unique_filename,
-            address=form.address.data
-        )
-        new_group.members.append(current_user)  # Add the creator to the group
+            db.session.commit()
+            flash('Group created successfully!', 'success')
+            return redirect(url_for('view_group', group_id=new_group.id))
 
-        # Add selected users
-        for user_id in selected_user_ids:
-            user = User.query.get(user_id)
-            if user:
-                new_group.members.append(user)
-
-        db.session.add(new_group)
-        db.session.commit()
-
-        flash(f'Group "{form.group_name.data}" created successfully!', 'success')
-        return redirect(url_for('view_group', group_id=new_group.id))
-
-    return render_template('creategroup.html', form=form, selected_users=selected_users)
+    return render_template('creategroup.html', form=form)
 
 
 @app.route('/group/<int:group_id>')
@@ -401,12 +416,13 @@ def creategroup():
 def view_group(group_id):
     group = Group.query.get_or_404(group_id)
 
-    # Check if the current user is a member of the group
+    # Ensure the current user is a member of the group
     if current_user not in group.members:
-        flash("You are not a member of this group.", "danger")
+        flash("You are not a member of this group.", "error")
         return redirect(url_for('mygroups'))
 
     return render_template('viewgroup.html', group=group)
+
 
 @app.route('/leave_group/<int:group_id>', methods=['POST'])
 @login_required

@@ -1,49 +1,45 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Groups</title>
 </head>
 <body>
-    <a href="{{ url_for('dashboard') }}">Back to my dashboard</a>
     <h1>My Groups</h1>
 
-    <!-- Create Group Button -->
-    <a href="{{ url_for('creategroup') }}">
-        <button style="padding: 10px 20px; font-size: 16px; background-color: blue; color: white; border: none; cursor: pointer;">
-            Create New Group
-        </button>
-    </a>
-
-    <br><br>
-
-    {% if current_user.groups %}
-        <h2>Your Groups</h2>
+    <h2>Groups I Created</h2>
+    {% if created_groups %}
         <ul>
-            {% for group in current_user.groups %}
+            {% for group in created_groups %}
                 <li>
-                    <img src="{{ url_for('static', filename='group_pics/' + group.profile_picture) }}" 
-                         alt="Group Profile Picture" 
-                         style="width: 100px; height: 100px; border-radius: 50%;">
-                    <strong>{{ group.group_name }}</strong> - {{ group.address }}
-                    
-                    <!-- View Group Button -->
-                    <a href="{{ url_for('view_group', group_id=group.id) }}">
-                        <button style="margin-left: 10px; padding: 5px 10px;">View Group</button>
-                    </a>
-                    
-                    <!-- Leave Group Button -->
-                    <form method="POST" action="{{ url_for('leave_group', group_id=group.id) }}" style="display:inline;">
-                        <button type="submit" style="margin-left: 10px; padding: 5px 10px; background-color: red; color: white; border: none; cursor: pointer;">
-                            Leave Group
-                        </button>
-                    </form>
+                    <a href="{{ url_for('view_group', group_id=group.id) }}">{{ group.group_name }}</a>
+                    <p>Address: {{ group.address }}</p>
+                    <p>Members: {{ group.members|length }}</p>
                 </li>
             {% endfor %}
         </ul>
     {% else %}
-        <p>You are not in any groups yet.</p>
+        <p>You haven't created any groups yet.</p>
     {% endif %}
 
+    <h2>Groups I Am In</h2>
+    {% if member_groups %}
+        <ul>
+            {% for group in member_groups %}
+                <li>
+                    <a href="{{ url_for('view_group', group_id=group.id) }}">{{ group.group_name }}</a>
+                    <p>Address: {{ group.address }}</p>
+                    <p>Members: {{ group.members|length }}</p>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>You are not a member of any groups.</p>
+    {% endif %}
+
+    <a href="{{ url_for('creategroup') }}">Create a New Group</a><br>
+    <a href="{{ url_for('dashboard') }}">Back to Dashboard</a>
 </body>
 </html>
 
