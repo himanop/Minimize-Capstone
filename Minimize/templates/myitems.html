@@ -4,7 +4,7 @@
     <title>{{ title }}</title>
 </head>
 <body>
-    <h1>{{ user.first_name }}'s Items</h1>
+    <h1>{{user.first_name}}'s Items</h1>
 
     <!-- Add Item Button (Only Show If Viewing Your Own Items) -->
     {% if user.id == current_user.id %}

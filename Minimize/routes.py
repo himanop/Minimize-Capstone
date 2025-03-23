@@ -1,4 +1,4 @@
-from flask import Flask, render_template, flash, redirect, url_for, session, request
+from flask import Flask, render_template, flash, redirect, url_for, session, request, jsonify
 from werkzeug.utils import secure_filename
 # print("Top of routes.py")
 from Minimize import app, bcrypt, db
@@ -358,17 +358,10 @@ def creategroup():
             else:
                 form.members.choices = []
 
-        elif 'remove_member' in request.form:
-            user_id = request.form.get('remove_member')
-            members = request.form.getlist('members')
-            if user_id in members:
-                members.remove(user_id)
-            form.members.data = members
-
         elif form.submit.data:
             group_name = form.group_name.data
             address = form.address.data
-            member_ids = request.form.get('members', '').split(',')
+            member_ids = request.form.get('members', '').split(',')  # Get selected user IDs from the hidden input
             member_ids = [int(id) for id in member_ids if id.strip()]  # Validate member IDs
             profile_picture = form.profile_picture.data
 
@@ -400,15 +393,34 @@ def creategroup():
 
             # Add selected users to the group
             for user_id in member_ids:
-                user = User.query.get(user_id)
-                if user:
-                    new_group.members.append(user)
+                try:
+                    user_id = int(user_id)  # Ensure user_id is an integer
+                    user = User.query.get(user_id)
+                    if user:
+                        new_group.members.append(user)
+                except (ValueError, TypeError):
+                    flash(f"Invalid user ID: {user_id}", "error")
 
             db.session.commit()
             flash('Group created successfully!', 'success')
             return redirect(url_for('view_group', group_id=new_group.id))
 
     return render_template('creategroup.html', form=form)
+
+@app.route('/search_users')
+@login_required
+def search_users():
+    search_query = request.args.get('query', '').strip()
+    if search_query:
+        # Search for users by username, first name, or last name
+        users = User.query.filter(
+            (User.username.ilike(f'%{search_query}%')) |
+            (User.first_name.ilike(f'%{search_query}%')) |
+            (User.last_name.ilike(f'%{search_query}%'))
+        ).all()
+        users_data = [{'id': user.id, 'username': user.username, 'first_name': user.first_name, 'last_name': user.last_name} for user in users]
+        return jsonify(users_data)
+    return jsonify([])
 
 
 @app.route('/group/<int:group_id>')

@@ -1,87 +1,136 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Create a Group</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Group</title>
+    <style>
+        .search-results {
+            border: 1px solid #ccc;
+            max-height: 150px;
+            overflow-y: auto;
+            margin-top: 10px;
+        }
+        .search-results div {
+            padding: 5px;
+            cursor: pointer;
+        }
+        .search-results div:hover {
+            background-color: #f0f0f0;
+        }
+        .selected-members {
+            margin-top: 20px;
+        }
+        .selected-members ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        .selected-members li {
+            padding: 5px;
+            border: 1px solid #ccc;
+            margin-bottom: 5px;
+        }
+    </style>
 </head>
 <body>
-
     <h1>Create a New Group</h1>
-    <a href="{{ url_for('dashboard') }}">Back to Dashboard</a>
-
-    <!-- Search for Users -->
-    <form method="POST">
+    <form method="POST" action="{{ url_for('creategroup') }}" enctype="multipart/form-data">
         {{ form.hidden_tag() }}
-        
-        <p>
-            {{ form.search_username.label }} <br>
-            {{ form.search_username(size=30) }}
-            <button type="submit" name="submit_search">Search</button>
-        </p>
 
-        <!-- Preserve selected users -->
-        {% for user in selected_users %}
-            <input type="hidden" name="selected_users" value="{{ user.id }}">
-        {% endfor %}
-    </form>
-
-    <!-- Display Search Results -->
-    {% if form.members.choices %}
-        <h3>Search Results:</h3>
-        <ul>
-            {% for value, label in form.members.choices %}
-                <li>
-                    {{ label }} <!-- Displays "First Last (@username)" -->
-                    <form method="POST" style="display:inline;">
-                        {{ form.hidden_tag() }}
-                        <input type="hidden" name="new_user_id" value="{{ value }}">
-                        <input type="hidden" name="search_username" value="{{ form.search_username.data }}">
-                        {% for user in selected_users %}
-                            <input type="hidden" name="selected_users" value="{{ user.id }}">
-                        {% endfor %}
-                        <button type="submit" name="add_user">Add</button>
-                    </form>
-                </li>
+        <div>
+            {{ form.group_name.label }}<br>
+            {{ form.group_name(size=32) }}<br>
+            {% for error in form.group_name.errors %}
+                <span style="color: red;">[{{ error }}]</span>
             {% endfor %}
-        </ul>
-    {% else %}
-        <p>No users found. Try searching for a username.</p>
-    {% endif %}
+        </div>
 
-    <!-- Group Creation Form -->
-    <form method="POST" enctype="multipart/form-data">
-        {{ form.hidden_tag() }}
+        <div>
+            {{ form.address.label }}<br>
+            {{ form.address(size=32) }}<br>
+            {% for error in form.address.errors %}
+                <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </div>
 
-        <!-- Group Name -->
-        <p>
-            {{ form.group_name.label }} <br>
-            {{ form.group_name(size=30) }}
-        </p>
+        <div>
+            {{ form.profile_picture.label }}<br>
+            {{ form.profile_picture }}<br>
+            {% for error in form.profile_picture.errors %}
+                <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </div>
 
-        <!-- Profile Picture Upload -->
-        <p>
-            {{ form.profile_picture.label }} <br>
-            {{ form.profile_picture() }}
-        </p>
+        <div>
+            <label for="search_username">Search Users by Name or Username:</label><br>
+            <input type="text" id="search_username" name="search_username" placeholder="Type to search...">
+            <button type="button" id="search_button">Search</button><br>
+            <div id="search_results" class="search-results"></div>
+        </div>
 
-        <!-- Group Address -->
-        <p>
-            {{ form.address.label }} <br>
-            {{ form.address(size=50) }}
-        </p>
+        <div class="selected-members">
+            <label>Selected Members:</label>
+            <ul id="selected_members"></ul>
+            <input type="hidden" id="members" name="members">
+        </div>
 
-        <!-- Display Selected Members Before Submission -->
-        {% if selected_users %}
-            <h3>Selected Members:</h3>
-            <ul>
-                {% for user in selected_users %}
-                    <li>{{ user.first_name }} {{ user.last_name }} (@{{ user.username }})</li>
-                {% endfor %}
-            </ul>
-        {% endif %}
-
-        <!-- Submit Button -->
-        <p>{{ form.submit() }}</p>
+        <div>
+            {{ form.submit() }}
+        </div>
     </form>
 
+    <script>
+        // Function to handle user search
+        document.getElementById('search_button').addEventListener('click', function () {
+            const searchQuery = document.getElementById('search_username').value.trim();
+            if (searchQuery) {
+                fetch(`/search_users?query=${searchQuery}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        const searchResults = document.getElementById('search_results');
+                        searchResults.innerHTML = data.map(user => `
+                            <div onclick="addUser(${user.id}, '${user.username}', '${user.first_name}', '${user.last_name}')">
+                                ${user.username} (${user.first_name} ${user.last_name})
+                            </div>
+                        `).join('');
+                    });
+            }
+        });
+
+        // Function to add a user to the selected members list
+        function addUser(userId, username, firstName, lastName) {
+            const selectedMembers = document.getElementById('selected_members');
+            const membersInput = document.getElementById('members');
+
+            // Check if the user is already selected
+            if (!document.querySelector(`#selected_members li[data-user-id="${userId}"]`)) {
+                // Add the user to the selected members list
+                selectedMembers.innerHTML += `
+                    <li data-user-id="${userId}">
+                        ${username} (${firstName} ${lastName})
+                        <button type="button" onclick="removeUser(${userId})">Remove</button>
+                    </li>
+                `;
+
+                // Update the hidden input with the selected user IDs
+                const currentMembers = membersInput.value ? membersInput.value.split(',') : [];
+                currentMembers.push(userId);
+                membersInput.value = currentMembers.join(',');
+            }
+        }
+
+        // Function to remove a user from the selected members list
+        function removeUser(userId) {
+            const selectedMember = document.querySelector(`#selected_members li[data-user-id="${userId}"]`);
+            if (selectedMember) {
+                selectedMember.remove();
+
+                // Update the hidden input with the remaining user IDs
+                const membersInput = document.getElementById('members');
+                const currentMembers = membersInput.value.split(',').filter(id => id != userId);
+                membersInput.value = currentMembers.join(',');
+            }
+        }
+    </script>
 </body>
 </html>
