@@ -21,6 +21,7 @@ class Group(db.Model):
     profile_picture = db.Column(db.String(100), nullable=True, default='default_group.jpg')
     address = db.Column(db.String(255), nullable=False)
     date_created = db.Column(db.DateTime, default=datetime.utcnow)
+    creator_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)  # Add this line
 
     # Many-to-Many relationship with users
     members = db.relationship('User', secondary=group_membership, back_populates='groups')

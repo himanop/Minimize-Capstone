@@ -332,10 +332,10 @@ def update_item(item_id):
 @login_required
 def mygroups():
     # Fetch groups created by the current user
-    created_groups = Group.query.filter(Group.members.any(id=current_user.id)).all()
+    created_groups = Group.query.filter_by(creator_id=current_user.id).all()
 
-    # Fetch groups the current user is a member of (including those they created)
-    member_groups = current_user.groups
+    # Fetch groups the current user is a member of (excluding those they created)
+    member_groups = [group for group in current_user.groups if group.creator_id != current_user.id]
 
     return render_template('mygroups.html', created_groups=created_groups, member_groups=member_groups)
 
@@ -383,7 +383,8 @@ def creategroup():
             new_group = Group(
                 group_name=group_name,
                 address=address,
-                profile_picture=profile_picture_filename
+                profile_picture=profile_picture_filename,
+                creator_id=current_user.id  # Set the creator_id to the current user's ID
             )
             db.session.add(new_group)
             db.session.commit()
@@ -423,7 +424,7 @@ def search_users():
     return jsonify([])
 
 
-@app.route('/group/<int:group_id>')
+@app.route('/group/<int:group_id>', methods=['GET', 'POST'])
 @login_required
 def view_group(group_id):
     group = Group.query.get_or_404(group_id)
@@ -433,7 +434,38 @@ def view_group(group_id):
         flash("You are not a member of this group.", "error")
         return redirect(url_for('mygroups'))
 
-    return render_template('viewgroup.html', group=group)
+    # Check if the current user is the group owner
+    is_owner = group.creator_id == current_user.id
+
+    # Handle adding a new member
+    if request.method == 'POST' and is_owner:
+        if 'add_member' in request.form:
+            username = request.form.get('username').strip()
+            user_to_add = User.query.filter_by(username=username).first()
+
+            if user_to_add:
+                if user_to_add in group.members:
+                    flash(f"{username} is already in the group.", "warning")
+                else:
+                    group.members.append(user_to_add)
+                    db.session.commit()
+                    flash(f"{username} has been added to the group!", "success")
+            else:
+                flash("User not found.", "error")
+
+        # Handle removing a member
+        elif 'remove_member' in request.form:
+            user_id = request.form.get('user_id')
+            user_to_remove = User.query.get(user_id)
+
+            if user_to_remove and user_to_remove in group.members:
+                group.members.remove(user_to_remove)
+                db.session.commit()
+                flash(f"{user_to_remove.username} has been removed from the group.", "success")
+            else:
+                flash("User not found in the group.", "error")
+
+    return render_template('viewgroup.html', group=group, is_owner=is_owner)
 
 
 @app.route('/leave_group/<int:group_id>', methods=['POST'])
