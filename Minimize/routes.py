@@ -331,11 +331,20 @@ def update_item(item_id):
 @app.route('/mygroups')
 @login_required
 def mygroups():
-    # Fetch groups created by the current user
+    # Fetch groups created by the current user through query
+    # If current user.id is the creator_id of the group then store the group in the created_groups list
     created_groups = Group.query.filter_by(creator_id=current_user.id).all()
+    print(f"Here are the users created Groups: {created_groups}")
 
-    # Fetch groups the current user is a member of (excluding those they created)
+    # Fetch groups the current user is a member of but did not create
+    # current_user.groups is a list of all groups the user is a member of
+    # here we are looping through the groups that the current user is in and only adding the groups that the current user did not create
+    # to the member_groups list
+    # We are adding the entire group object to the member_groups list(ex. Group(id=2, creator_id=12)).
+    # The first "group" stores the variable/object that we are adding to the list.
+    # Once we have the group object we can access the group's attributes like group.id, group.creator_id, group.description, etc.
     member_groups = [group for group in current_user.groups if group.creator_id != current_user.id]
+    print(f"Here are the users member Groups: {member_groups}")
 
     return render_template('mygroups.html', created_groups=created_groups, member_groups=member_groups)
 
@@ -426,6 +435,8 @@ def search_users():
 
 @app.route('/group/<int:group_id>', methods=['GET', 'POST'])
 @login_required
+# Route below allows users to view a group they are in
+# If they are the owner they have the ability to add and remove members
 def view_group(group_id):
     group = Group.query.get_or_404(group_id)
 
@@ -453,6 +464,24 @@ def view_group(group_id):
             else:
                 flash("User not found.", "error")
 
+        elif 'edit_group' in request.form:
+            new_group_name = request.form.get('group_name')
+            new_address = request.form.get('address')
+            new_profile_picture = request.files.get('profile_picture')
+
+            group.group_name = new_group_name
+            group.address = new_address
+            
+            if new_profile_picture and new_profile_picture.filename != '':
+                filename = secure_filename(new_profile_picture.filename)
+                pic_path = os.path.join(app.root_path, 'static', 'group_pics', filename)
+                new_profile_picture.save(pic_path)
+                group.profile_picture = filename
+
+            db.session.commit()
+            flash("Group details updated successfully.", "success")
+
+
         # Handle removing a member
         elif 'remove_member' in request.form:
             user_id = request.form.get('user_id')
@@ -465,8 +494,40 @@ def view_group(group_id):
             else:
                 flash("User not found in the group.", "error")
 
+        elif 'delete_group' in request.form:
+            db.session.delete(group)
+            db.session.commit()
+            flash("Group has been deleted.", "success")
+            return redirect(url_for('mygroups'))
+
     return render_template('viewgroup.html', group=group, is_owner=is_owner)
 
+@app.route('/group/<int:group_id>/chat', methods=['GET', 'POST'])
+@login_required
+def group_chat(group_id):
+    group = Group.query.get_or_404(group_id)
+
+    # Ensure the current user is a member of the group
+    if current_user not in group.members:
+        flash("You are not a member of this group.", "error")
+        return redirect(url_for('mygroups'))
+
+    # Handle sending a new message
+    if request.method == 'POST':
+        content = request.form.get('content')
+        if content:
+            new_message = Message(
+                content=content,
+                user_id=current_user.id,
+                group_id=group.id
+            )
+            db.session.add(new_message)
+            db.session.commit()
+
+    # Retrieve all messages for the group
+    messages = Message.query.filter_by(group_id=group.id).order_by(Message.timestamp.asc()).all()
+
+    return render_template('group_chat.html', group=group, messages=messages)
 
 @app.route('/leave_group/<int:group_id>', methods=['POST'])
 @login_required

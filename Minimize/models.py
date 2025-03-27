@@ -26,6 +26,18 @@ class Group(db.Model):
     # Many-to-Many relationship with users
     members = db.relationship('User', secondary=group_membership, back_populates='groups')
 
+class Message(db.Model):
+    __tablename__ = 'messages'
+    id = db.Column(db.Integer, primary_key=True)
+    content = db.Column(db.Text, nullable=False)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    group_id = db.Column(db.Integer, db.ForeignKey('groups.id'), nullable=False)
+
+    # Relationships
+    user = db.relationship('User', backref='messages')
+    group = db.relationship('Group', backref='messages')
+
 class User(db.Model, UserMixin):
     __tablename__ = 'user'
     id = db.Column(db.Integer, primary_key=True)
