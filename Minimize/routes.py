@@ -354,20 +354,20 @@ def creategroup():
     form = CreateGroupForm()
 
     if request.method == 'POST':
-        if 'submit_search' in request.form:
-            search_query = request.form.get('search_username', '').strip()
-            if search_query:
-                # Search for users by username, first name, or last name
-                users = User.query.filter(
-                    (User.username.ilike(f'%{search_query}%')) |
-                    (User.first_name.ilike(f'%{search_query}%')) |
-                    (User.last_name.ilike(f'%{search_query}%'))
-                ).all()
-                form.members.choices = [(user.id, f"{user.username} ({user.first_name} {user.last_name})") for user in users]
-            else:
-                form.members.choices = []
+        # if 'submit_search' in request.form:
+        #     search_query = request.form.get('search_username', '').strip()
+        #     if search_query:
+        #         # Search for users by username, first name, or last name
+        #         users = User.query.filter(
+        #             (User.username.ilike(f'%{search_query}%')) |
+        #             (User.first_name.ilike(f'%{search_query}%')) |
+        #             (User.last_name.ilike(f'%{search_query}%'))
+        #         ).all()
+        #         form.members.choices = [(user.id, f"{user.username} ({user.first_name} {user.last_name})") for user in users]
+        #     else:
+        #         form.members.choices = []
 
-        elif form.submit.data:
+        if form.submit.data:
             group_name = form.group_name.data
             address = form.address.data
             member_ids = request.form.get('members', '').split(',')  # Get selected user IDs from the hidden input
@@ -420,6 +420,7 @@ def creategroup():
 @app.route('/search_users')
 @login_required
 def search_users():
+    #Below we are getting the query from the search bar from the fetch function in our JS code
     search_query = request.args.get('query', '').strip()
     if search_query:
         # Search for users by username, first name, or last name
@@ -471,7 +472,7 @@ def view_group(group_id):
 
             group.group_name = new_group_name
             group.address = new_address
-            
+
             if new_profile_picture and new_profile_picture.filename != '':
                 filename = secure_filename(new_profile_picture.filename)
                 pic_path = os.path.join(app.root_path, 'static', 'group_pics', filename)
@@ -484,7 +485,9 @@ def view_group(group_id):
 
         # Handle removing a member
         elif 'remove_member' in request.form:
+            # Below we get the member/user id to remove user from the group
             user_id = request.form.get('user_id')
+
             user_to_remove = User.query.get(user_id)
 
             if user_to_remove and user_to_remove in group.members:

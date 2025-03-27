@@ -49,6 +49,7 @@
                 <!-- Remove member button (only for group owner) -->
                 {% if is_owner %}
                     <form method="POST" action="{{ url_for('view_group', group_id=group.id) }}" style="display: inline;">
+                        <!--Input type below holds the member id of the user we would like to remove from the group. Gained from for loop-->
                         <input type="hidden" name="user_id" value="{{ member.id }}">
                         <button type="submit" name="remove_member" onclick="return confirm('Are you sure you want to remove this member?')">Remove</button>
                     </form>

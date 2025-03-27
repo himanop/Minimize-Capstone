@@ -64,6 +64,7 @@
         <div>
             <label for="search_username">Search Users by Name or Username:</label><br>
             <input type="text" id="search_username" name="search_username" placeholder="Type to search...">
+            <!--Below is the search button we use in our JS Script code-->
             <button type="button" id="search_button">Search</button><br>
             <div id="search_results" class="search-results"></div>
         </div>
@@ -82,12 +83,17 @@
     <script>
         // Function to handle user search
         document.getElementById('search_button').addEventListener('click', function () {
+            //Below we are getting the value of the search_username input field and trimming it
             const searchQuery = document.getElementById('search_username').value.trim();
             if (searchQuery) {
+                //Below we are fetching the search_users route and passing the searchQuery as a query parameter
                 fetch(`/search_users?query=${searchQuery}`)
                     .then(response => response.json())
                     .then(data => {
+                        //Below we are getting the search_results div and setting its innerHTML to the data we received from the fetch request
                         const searchResults = document.getElementById('search_results');
+                        //Below we are mapping over the data and creating a div for each user
+                        //By using the backtick we are able to insert variables into the string using ${}
                         searchResults.innerHTML = data.map(user => `
                             <div onclick="addUser(${user.id}, '${user.username}', '${user.first_name}', '${user.last_name}')">
                                 ${user.username} (${user.first_name} ${user.last_name})
@@ -97,9 +103,11 @@
             }
         });
 
-        // Function to add a user to the selected members list
+        // Function to add a user to the selected members list. We are passing the parameters from the function above
         function addUser(userId, username, firstName, lastName) {
+            // Below we are getting the selected_members and members input fields
             const selectedMembers = document.getElementById('selected_members');
+            // Below is a hidden input field where we store the user ids of the selected members
             const membersInput = document.getElementById('members');
 
             // Check if the user is already selected
@@ -113,20 +121,28 @@
                 `;
 
                 // Update the hidden input with the selected user IDs
+                // Below we are getting the value of the members input field and splitting it into an array(ternary operator)
+                // -> condition ? value_if_true : value_if_false is the ternary operator logic
                 const currentMembers = membersInput.value ? membersInput.value.split(',') : [];
+                // Below adds the user id to the currentMembers array
                 currentMembers.push(userId);
+                // the line below converts the list of selected user IDs into a comma-separated string 
+                // and stores that string in a hidden input field (membersInput) so that it can be submitted with the form.
                 membersInput.value = currentMembers.join(',');
             }
         }
 
         // Function to remove a user from the selected members list
         function removeUser(userId) {
+            // Below we are getting the selected member by the user id
             const selectedMember = document.querySelector(`#selected_members li[data-user-id="${userId}"]`);
             if (selectedMember) {
+                // Removing the user from the selected members list DOM
                 selectedMember.remove();
 
                 // Update the hidden input with the remaining user IDs
                 const membersInput = document.getElementById('members');
+                // Removing the user from the hidden members input field
                 const currentMembers = membersInput.value.split(',').filter(id => id != userId);
                 membersInput.value = currentMembers.join(',');
             }
