@@ -514,6 +514,7 @@ def view_group(group_id):
 
     return render_template('viewgroup.html', group=group, is_owner=is_owner)
 
+# Render chat page
 @app.route('/group/<int:group_id>/chat')
 @login_required
 def group_chat(group_id):
@@ -521,8 +522,35 @@ def group_chat(group_id):
     if current_user not in group.members:
         flash("You are not a member of this group.", "danger")
         return redirect(url_for('mygroups'))
+    return render_template('groupchat.html', group=group)
+
+
+# Return messages as JSON
+@app.route('/group/<int:group_id>/chat/messages')
+@login_required
+def get_messages(group_id):
     messages = Message.query.filter_by(group_id=group_id).order_by(Message.timestamp).all()
-    return render_template('groupchat.html', group=group, messages=messages, group_id=group_id)
+    return jsonify([
+        {
+            'username': m.user.username,
+            'content': m.content,
+            'timestamp': m.timestamp.strftime('%H:%M')
+        } for m in messages
+    ])
+
+
+# Handle message submission
+@app.route('/group/<int:group_id>/chat/send', methods=['POST'])
+@login_required
+def send_message(group_id):
+    content = request.json.get('message')
+    if content:
+        msg = Message(content=content, user_id=current_user.id, group_id=group_id)
+        db.session.add(msg)
+        db.session.commit()
+        return jsonify({'status': 'success'})
+    return jsonify({'status': 'error'}), 400
+
 
 
 # @app.route('/group/<int:group_id>/chat', methods=['GET', 'POST'])
