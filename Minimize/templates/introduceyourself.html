@@ -1,25 +1,44 @@
-<h1>Introduce Yourself</h1>
-<form method="POST" action="" enctype="multipart/form-data">
-    <!--Hidden tag is used for protection of the form-->
-    {{form.hidden_tag()}}
-    <fieldset class="form-group">
-            <!--We are using the variable names defined in forms.py to refer to the fields-->
-            <div>
-                {{ form.instagram_handle.label }}
-                {{ form.instagram_handle }}
-            </div>
-            <div>
-                {{ form.snapchat_handle.label }}
-                {{ form.snapchat_handle }}
-            </div>
-            <div>
-                {{ form.profile_picture.label }}
-                {{ form.profile_picture }}
-            </div>
-            <div>
-                {{ form.short_bio.label }}
-                {{ form.short_bio }}
-            </div>
-        {{form.submit}}
-    </fieldset>
-</form>
+{% extends "base.html" %}
+
+{% block title %}Introduce Yourself{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-8">
+    <div class="card shadow-sm rounded">
+      <div class="card-header bg-primary text-white">
+        <h4 class="mb-0">Introduce Yourself</h4>
+      </div>
+      <div class="card-body">
+        <form method="POST" enctype="multipart/form-data">
+          {{ form.hidden_tag() }}
+
+          <div class="mb-3">
+            {{ form.instagram_handle.label(class="form-label") }}
+            {{ form.instagram_handle(class="form-control") }}
+          </div>
+
+          <div class="mb-3">
+            {{ form.snapchat_handle.label(class="form-label") }}
+            {{ form.snapchat_handle(class="form-control") }}
+          </div>
+
+          <div class="mb-3">
+            {{ form.profile_picture.label(class="form-label") }}
+            {{ form.profile_picture(class="form-control") }}
+          </div>
+
+          <div class="mb-3">
+            {{ form.short_bio.label(class="form-label") }}
+            {{ form.short_bio(class="form-control", rows=4) }}
+          </div>
+
+          <div class="d-grid">
+            {{ form.submit(class="btn btn-success") }}
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

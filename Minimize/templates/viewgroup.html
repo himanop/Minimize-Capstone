@@ -1,63 +1,79 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ group.group_name }}</title>
-</head>
-<body>
-    <h1>{{ group.group_name }}</h1>
-    <img src="{{ url_for('static', filename='group_pics/' + group.profile_picture) }}" alt="Group Profile Picture" width="100">
-    <p>Address: {{ group.address }}</p>
+{% extends "base.html" %}
 
-    <!-- Display edit and delete buttons if the current user is the owner -->
-    {% if is_owner %}
-        <form method="POST" action="{{ url_for('view_group', group_id=group.id) }}" enctype="multipart/form-data">
-            <h2>Edit Group</h2>
-            <label for="group_name">Group Name:</label>
-            <input type="text" id="group_name" name="group_name" value="{{ group.group_name }}"><br><br>
+{% block title %}{{ group.group_name }}{% endblock %}
 
-            <label for="address">Address:</label>
-            <input type="text" id="address" name="address" value="{{ group.address }}"><br><br>
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-10">
+    <div class="card shadow-sm rounded">
+      <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+        <h4 class="mb-0">{{ group.group_name }}</h4>
+        <a href="{{ url_for('mygroups') }}" class="btn btn-light btn-sm">← Back to My Groups</a>
+      </div>
+      <div class="card-body">
+        <div class="text-center mb-4">
+          <img src="{{ url_for('static', filename='group_pics/' + group.profile_picture) }}" 
+               alt="Group Profile Picture"
+               class="img-thumbnail"
+               style="width: 120px; height: 120px; object-fit: cover;">
+        </div>
 
-            <label for="profile_picture">Profile Picture:</label>
-            <input type="file" id="profile_picture" name="profile_picture"><br><br>
+        <p><strong>Address:</strong> {{ group.address }}</p>
 
-            <button type="submit" name="edit_group">Save Changes</button>
-        </form>
+        {% if is_owner %}
+          <hr>
+          <h5 class="text-primary">Edit Group</h5>
+          <form method="POST" action="{{ url_for('view_group', group_id=group.id) }}" enctype="multipart/form-data" class="mb-3">
+            <div class="mb-3">
+              <label for="group_name" class="form-label">Group Name</label>
+              <input type="text" id="group_name" name="group_name" class="form-control" value="{{ group.group_name }}">
+            </div>
+            <div class="mb-3">
+              <label for="address" class="form-label">Address</label>
+              <input type="text" id="address" name="address" class="form-control" value="{{ group.address }}">
+            </div>
+            <div class="mb-3">
+              <label for="profile_picture" class="form-label">Profile Picture</label>
+              <input type="file" id="profile_picture" name="profile_picture" class="form-control">
+            </div>
+            <button type="submit" name="edit_group" class="btn btn-success">Save Changes</button>
+          </form>
 
-        <form method="POST" action="{{ url_for('view_group', group_id=group.id) }}">
-            <button type="submit" name="delete_group" onclick="return confirm('Are you sure you want to delete this group?')">Delete Group</button>
-        </form>
+          <form method="POST" action="{{ url_for('view_group', group_id=group.id) }}" class="mb-4">
+            <button type="submit" name="delete_group" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete this group?')">Delete Group</button>
+          </form>
 
-        <!-- Add a new member -->
-        <h2>Add a Member</h2>
-        <form method="POST" action="{{ url_for('view_group', group_id=group.id) }}">
-            <label for="username">Username:</label>
-            <input type="text" id="username" name="username" placeholder="Enter username">
-            <button type="submit" name="add_member">Add Member</button>
-        </form>
-    {% endif %}
+          <h5 class="text-primary">Add a Member</h5>
+          <form method="POST" action="{{ url_for('view_group', group_id=group.id) }}" class="mb-4">
+            <div class="input-group">
+              <input type="text" id="username" name="username" class="form-control" placeholder="Enter username">
+              <button type="submit" name="add_member" class="btn btn-outline-primary">Add Member</button>
+            </div>
+          </form>
+        {% endif %}
 
-    <h2>Members</h2>
-    <ul>
-        {% for member in group.members %}
-            <li>
-                <a href="{{ url_for('view_user', user_id=member.id) }}">
-                    {{ member.username }} ({{ member.first_name }} {{ member.last_name }})
-                </a>
-                <!-- Remove member button (only for group owner) -->
-                {% if is_owner %}
-                    <form method="POST" action="{{ url_for('view_group', group_id=group.id) }}" style="display: inline;">
-                        <!--Input type below holds the member id of the user we would like to remove from the group. Gained from for loop-->
-                        <input type="hidden" name="user_id" value="{{ member.id }}">
-                        <button type="submit" name="remove_member" onclick="return confirm('Are you sure you want to remove this member?')">Remove</button>
-                    </form>
-                {% endif %}
-            </li>
-        {% endfor %}
-    </ul>
-    <a href="{{ url_for('group_chat', group_id=group.id) }}">Group Chat</a>
-    <a href="{{ url_for('mygroups') }}">Back to My Groups</a>
-</body>
-</html>
+        <hr>
+        <h5 class="text-primary">Group Members</h5>
+        <ul class="list-group mb-3">
+          {% for member in group.members %}
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <a href="{{ url_for('view_user', user_id=member.id) }}">
+              {{ member.username }} ({{ member.first_name }} {{ member.last_name }})
+            </a>
+            {% if is_owner %}
+            <form method="POST" action="{{ url_for('view_group', group_id=group.id) }}">
+              <input type="hidden" name="user_id" value="{{ member.id }}">
+              <button type="submit" name="remove_member" class="btn btn-sm btn-outline-danger"
+                      onclick="return confirm('Are you sure you want to remove this member?')">Remove</button>
+            </form>
+            {% endif %}
+          </li>
+          {% endfor %}
+        </ul>
+
+        <a href="{{ url_for('group_chat', group_id=group.id) }}" class="btn btn-primary">Go to Group Chat</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

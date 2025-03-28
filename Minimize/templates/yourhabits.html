@@ -1,20 +1,39 @@
-<form method="POST" action="">
-    <!--Hidden tag is used for protection of the form-->
-    {{form.hidden_tag()}}
-    <fieldset class="form-group">
-            <!--We are using the variable names defined in forms.py to refer to the fields-->
-            <div>
-                {{ form.sleep.label }}
-                {{ form.sleep }}
-            </div>
-            <div>
-                {{ form.cleanliness.label }}
-                {{ form.cleanliness }}
-            </div>
-            <div>
-                {{ form.relationship.label }}
-                {{ form.relationship }}
-            </div>
-        {{form.submit}}
-    </fieldset>
-</form>
+{% extends "base.html" %}
+
+{% block title %}Your Habits{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-6">
+    <div class="card shadow-sm rounded">
+      <div class="card-header bg-primary text-white text-center">
+        <h4 class="mb-0">Tell Us About Your Habits</h4>
+      </div>
+      <div class="card-body">
+        <form method="POST">
+          {{ form.hidden_tag() }}
+
+          <div class="mb-3">
+            {{ form.sleep.label(class="form-label") }}
+            {{ form.sleep(class="form-control") }}
+          </div>
+
+          <div class="mb-3">
+            {{ form.cleanliness.label(class="form-label") }}
+            {{ form.cleanliness(class="form-control") }}
+          </div>
+
+          <div class="mb-3">
+            {{ form.relationship.label(class="form-label") }}
+            {{ form.relationship(class="form-control") }}
+          </div>
+
+          <div class="d-grid">
+            {{ form.submit(class="btn btn-success") }}
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

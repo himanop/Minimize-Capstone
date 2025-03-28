@@ -1,26 +1,62 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Update Profile</title>
-</head>
-<body>
-    <h1>Update Profile</h1>
-    <form method="POST" action="{{ url_for('updateprofile') }}" enctype="multipart/form-data">
-        {{ form.hidden_tag() }}
-        
+{% extends "base.html" %}
 
-        <h2>Social Media</h2>
-        <p>{{ form.instagram_handle.label }} {{ form.instagram_handle() }}</p>
-        <p>{{ form.snapchat_handle.label }} {{ form.snapchat_handle() }}</p>
-        <p>{{ form.profile_picture.label }} {{ form.profile_picture() }}</p>
-        <p>{{ form.short_bio.label }} {{ form.short_bio() }}</p>
+{% block title %}Update Profile{% endblock %}
 
-        <h2>Habits</h2>
-        <p>{{ form.sleep.label }} {{ form.sleep() }}</p>
-        <p>{{ form.cleanliness.label }} {{ form.cleanliness() }}</p>
-        <p>{{ form.relationship.label }} {{ form.relationship() }}</p>
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-8">
+    <div class="card shadow-sm rounded">
+      <div class="card-header bg-primary text-white">
+        <h4 class="mb-0">Update Profile</h4>
+      </div>
+      <div class="card-body">
+        <form method="POST" action="{{ url_for('updateprofile') }}" enctype="multipart/form-data">
+          {{ form.hidden_tag() }}
 
-        <p>{{ form.submit }}</p>
-    </form>   
-</body>
-</html>
+          <h5 class="text-primary">Social Media</h5>
+          <div class="mb-3">
+            {{ form.instagram_handle.label(class="form-label") }}
+            {{ form.instagram_handle(class="form-control") }}
+          </div>
+
+          <div class="mb-3">
+            {{ form.snapchat_handle.label(class="form-label") }}
+            {{ form.snapchat_handle(class="form-control") }}
+          </div>
+
+          <div class="mb-3">
+            {{ form.profile_picture.label(class="form-label") }}
+            {{ form.profile_picture(class="form-control") }}
+          </div>
+
+          <div class="mb-4">
+            {{ form.short_bio.label(class="form-label") }}
+            {{ form.short_bio(class="form-control", rows=3) }}
+          </div>
+
+          <h5 class="text-primary">Habits</h5>
+          <div class="mb-3">
+            {{ form.sleep.label(class="form-label") }}
+            {{ form.sleep(class="form-control") }}
+          </div>
+
+          <div class="mb-3">
+            {{ form.cleanliness.label(class="form-label") }}
+            {{ form.cleanliness(class="form-control") }}
+          </div>
+
+          <div class="mb-4">
+            {{ form.relationship.label(class="form-label") }}
+            {{ form.relationship(class="form-control") }}
+          </div>
+
+          <div class="d-grid">
+            {{ form.submit(class="btn btn-success") }}
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

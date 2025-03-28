@@ -1,76 +1,94 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>{{ title }}</title>
-</head>
-<body>
-    <h1>{{user.first_name}}'s Items</h1>
+{% extends "base.html" %}
 
-    <!-- Add Item Button (Only Show If Viewing Your Own Items) -->
-    {% if user.id == current_user.id %}
-        <a href="{{ url_for('add_item') }}">
-            <button style="padding: 10px 20px; font-size: 16px;">Add New Item</button>
-        </a>
-    {% endif %}
+{% block title %}{{ title }}{% endblock %}
 
-    <!-- Display Items -->
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-10">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h2 class="mb-0">{{ user.first_name }}'s Items</h2>
+      {% if user.id == current_user.id %}
+        <a href="{{ url_for('add_item') }}" class="btn btn-success">+ Add New Item</a>
+      {% endif %}
+    </div>
+
     {% if paginated_items.items %}
-        <h2>Items List</h2>
-        <ul>
-            {% for item in paginated_items.items %}
-                <li>
-                    <img src="{{ url_for('static', filename='item_pics/' + item.item_image) }}" 
-                         alt="Item Image" 
-                         style="width: 100px; height: 100px; object-fit: cover;">
-                    <strong>{{ item.item_name }}</strong> - {{ item.description }}
-                    {% if item.is_sharable %}
-                        <span style="color: green;">(Willing to share)</span>
-                    {% else %}
-                        <span style="color: red;">(Not Sharable)</span>
-                    {% endif %}
-                    
-                    <!-- Update Item Button (Only Show If User Owns the Item) -->
-                    {% if user.id == current_user.id %}
-                        <a href="{{ url_for('update_item', item_id=item.id) }}">
-                            <button style="margin-left: 10px; padding: 5px 10px; font-size: 14px;">Update</button>
-                        </a>
-                    {% endif %}
-                </li>
-            {% endfor %}
-        </ul>
+      <div class="row">
+        {% for item in paginated_items.items %}
+        <div class="col-md-6">
+          <div class="card mb-4 shadow-sm">
+            <div class="row g-0">
+              <div class="col-4">
+                <img src="{{ url_for('static', filename='item_pics/' + item.item_image) }}"
+                     alt="Item Image"
+                     class="img-fluid rounded-start"
+                     style="object-fit: cover; height: 100%;">
+              </div>
+              <div class="col-8">
+                <div class="card-body">
+                  <h5 class="card-title mb-1">{{ item.item_name }}</h5>
+                  <p class="card-text small mb-2">{{ item.description }}</p>
+                  {% if item.is_sharable %}
+                    <span class="badge bg-success">Willing to Share</span>
+                  {% else %}
+                    <span class="badge bg-danger">Not Sharable</span>
+                  {% endif %}
 
-        <!-- Pagination Controls -->
-        <div>
-            {% if paginated_items.has_prev %}
-                <a href="{{ url_for('myitems', page=paginated_items.prev_num, user_id=user.id) }}">Previous</a>
-            {% else %}
-                <span>Previous</span>
-            {% endif %}
-
-            {% for page_num in paginated_items.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
-                {% if page_num %}
-                    {% if page_num == paginated_items.page %}
-                        <span><strong>{{ page_num }}</strong></span>
-                    {% else %}
-                        <a href="{{ url_for('myitems', page=page_num, user_id=user.id) }}">{{ page_num }}</a>
-                    {% endif %}
-                {% else %}
-                    <span>...</span>
-                {% endif %}
-            {% endfor %}
-
-            {% if paginated_items.has_next %}
-                <a href="{{ url_for('myitems', page=paginated_items.next_num, user_id=user.id) }}">Next</a>
-            {% else %}
-                <span>Next</span>
-            {% endif %}
+                  {% if user.id == current_user.id %}
+                    <div class="mt-2">
+                      <a href="{{ url_for('update_item', item_id=item.id) }}" class="btn btn-sm btn-outline-primary">Update</a>
+                    </div>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
+        {% endfor %}
+      </div>
 
+      <!-- Pagination Controls -->
+      <nav>
+        <ul class="pagination justify-content-center">
+          {% if paginated_items.has_prev %}
+            <li class="page-item">
+              <a class="page-link" href="{{ url_for('myitems', page=paginated_items.prev_num, user_id=user.id) }}">Previous</a>
+            </li>
+          {% else %}
+            <li class="page-item disabled"><span class="page-link">Previous</span></li>
+          {% endif %}
+
+          {% for page_num in paginated_items.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+            {% if page_num %}
+              {% if page_num == paginated_items.page %}
+                <li class="page-item active"><span class="page-link">{{ page_num }}</span></li>
+              {% else %}
+                <li class="page-item">
+                  <a class="page-link" href="{{ url_for('myitems', page=page_num, user_id=user.id) }}">{{ page_num }}</a>
+                </li>
+              {% endif %}
+            {% else %}
+              <li class="page-item disabled"><span class="page-link">…</span></li>
+            {% endif %}
+          {% endfor %}
+
+          {% if paginated_items.has_next %}
+            <li class="page-item">
+              <a class="page-link" href="{{ url_for('myitems', page=paginated_items.next_num, user_id=user.id) }}">Next</a>
+            </li>
+          {% else %}
+            <li class="page-item disabled"><span class="page-link">Next</span></li>
+          {% endif %}
+        </ul>
+      </nav>
     {% else %}
-        <p>This user has no items.</p>
+      <p class="text-muted">This user has no items.</p>
     {% endif %}
 
-    <br>
-    <a href="{{ url_for('dashboard', user_id=user.id) }}">Back to my Dashboard</a>
-</body>
-</html>
+    <div class="mt-4">
+      <a href="{{ url_for('dashboard') }}" class="btn btn-outline-primary">← Back to Dashboard</a>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

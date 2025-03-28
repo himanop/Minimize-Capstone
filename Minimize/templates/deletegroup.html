@@ -1,20 +1,25 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Delete Group</title>
-</head>
-<body>
+{% extends "base.html" %}
 
-    <h1>Delete Group</h1>
-    <p>Are you sure you want to delete <strong>{{ group.group_name }}</strong>?</p>
-    <p>This action cannot be undone.</p>
+{% block title %}Delete Group{% endblock %}
 
-    <form method="POST">
-        <button type="submit" style="background-color: red; color: white;">Yes, Delete Group</button>
-    </form>
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-8">
+    <div class="card border-danger shadow-sm rounded">
+      <div class="card-header bg-danger text-white">
+        <h4 class="mb-0">Delete Group</h4>
+      </div>
+      <div class="card-body">
+        <p>Are you sure you want to delete <strong>{{ group.group_name }}</strong>?</p>
+        <p class="text-danger">This action cannot be undone.</p>
 
-    <br>
-    <a href="{{ url_for('view_group', group_id=group.id) }}">Cancel</a>
+        <form method="POST" class="mb-3">
+          <button type="submit" class="btn btn-danger">Yes, Delete Group</button>
+          <a href="{{ url_for('view_group', group_id=group.id) }}" class="btn btn-secondary ms-2">Cancel</a>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
 
-</body>
-</html>

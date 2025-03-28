@@ -1,46 +1,62 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Groups</title>
-</head>
-<body>
-    <h1>My Groups</h1>
+{% extends "base.html" %}
 
-    <h2>Groups I Created</h2>
+{% block title %}My Groups{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-10">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h2 class="mb-0">My Groups</h2>
+      <a href="{{ url_for('creategroup') }}" class="btn btn-success">+ Create New Group</a>
+    </div>
+
+    <h4 class="text-primary mt-4">Groups I Created</h4>
     {% if created_groups %}
-        <ul>
-            {% for group in created_groups %}
-                <li>
-                    <a href="{{ url_for('view_group', group_id=group.id) }}">{{ group.group_name }}</a>
-                    <p>Address: {{ group.address }}</p>
-                    <!--Display the number of memebers in the group using the |length filter-->
-                    <p>Members: {{ group.members|length }}</p>
-                </li>
-            {% endfor %}
-        </ul>
+      <div class="row">
+        {% for group in created_groups %}
+        <div class="col-md-6">
+          <div class="card mb-3 shadow-sm">
+            <div class="card-body">
+              <h5 class="card-title">
+                <a href="{{ url_for('view_group', group_id=group.id) }}">{{ group.group_name }}</a>
+              </h5>
+              <p class="card-text mb-1"><strong>Address:</strong> {{ group.address }}</p>
+              <p class="card-text"><strong>Members:</strong> {{ group.members | length }}</p>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
     {% else %}
-        <p>You haven't created any groups yet.</p>
+      <p class="text-muted">You haven't created any groups yet.</p>
     {% endif %}
 
-    <h2>Groups I Am In</h2>
+    <h4 class="text-primary mt-5">Groups I Am In</h4>
     {% if member_groups %}
-        <ul>
-            {% for group in member_groups %}
-                <li>
-                    <a href="{{ url_for('view_group', group_id=group.id) }}">{{ group.group_name }}</a>
-                    <p>Address: {{ group.address }}</p>
-                    <p>Members: {{ group.members|length }}</p>
-                </li>
-            {% endfor %}
-        </ul>
+      <div class="row">
+        {% for group in member_groups %}
+        <div class="col-md-6">
+          <div class="card mb-3 shadow-sm">
+            <div class="card-body">
+              <h5 class="card-title">
+                <a href="{{ url_for('view_group', group_id=group.id) }}">{{ group.group_name }}</a>
+              </h5>
+              <p class="card-text mb-1"><strong>Address:</strong> {{ group.address }}</p>
+              <p class="card-text"><strong>Members:</strong> {{ group.members | length }}</p>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
     {% else %}
-        <p>You are not a member of any groups.</p>
+      <p class="text-muted">You are not a member of any groups.</p>
     {% endif %}
 
-    <a href="{{ url_for('creategroup') }}">Create a New Group</a><br>
-    <a href="{{ url_for('dashboard') }}">Back to Dashboard</a>
-</body>
-</html>
+    <div class="mt-4">
+      <a href="{{ url_for('dashboard') }}" class="btn btn-outline-primary">← Back to Dashboard</a>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
 

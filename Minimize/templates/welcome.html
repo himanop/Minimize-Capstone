@@ -1,4 +1,20 @@
-<href="welcome.html">
-<h1>Welcome to Minimize!</h1>
-<a href="{{ url_for('signup') }}">Sign Up</a>
-<a href="{{ url_for('signin') }}">Sign In</a>
+{% extends "base.html" %}
+
+{% block title %}Welcome{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-8 text-center">
+    <div class="card shadow-sm rounded">
+      <div class="card-body py-5">
+        <h1 class="mb-4 text-primary">Welcome to Minimize!</h1>
+        <p class="lead mb-4">Simplify your space. Connect with others. Share what matters.</p>
+        <div class="d-grid gap-3 d-sm-flex justify-content-sm-center">
+          <a href="{{ url_for('signup') }}" class="btn btn-success btn-lg">Sign Up</a>
+          <a href="{{ url_for('signin') }}" class="btn btn-outline-primary btn-lg">Sign In</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

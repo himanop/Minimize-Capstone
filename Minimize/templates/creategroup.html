@@ -1,153 +1,111 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create Group</title>
-    <style>
-        .search-results {
-            border: 1px solid #ccc;
-            max-height: 150px;
-            overflow-y: auto;
-            margin-top: 10px;
-        }
-        .search-results div {
-            padding: 5px;
-            cursor: pointer;
-        }
-        .search-results div:hover {
-            background-color: #f0f0f0;
-        }
-        .selected-members {
-            margin-top: 20px;
-        }
-        .selected-members ul {
-            list-style-type: none;
-            padding: 0;
-        }
-        .selected-members li {
-            padding: 5px;
-            border: 1px solid #ccc;
-            margin-bottom: 5px;
-        }
-    </style>
-</head>
-<body>
-    <h1>Create a New Group</h1>
-    <a href="{{ url_for('dashboard') }}" class="link active">Back to My Dashboard</a>
-    <form method="POST" action="{{ url_for('creategroup') }}" enctype="multipart/form-data">
-        {{ form.hidden_tag() }}
+{% extends "base.html" %}
 
-        <div>
-            {{ form.group_name.label }}<br>
-            {{ form.group_name(size=32) }}<br>
+{% block title %}Create Group{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-10">
+    <div class="card shadow-sm rounded">
+      <div class="card-header bg-primary text-white">
+        <h4 class="mb-0">Create a New Group</h4>
+      </div>
+      <div class="card-body">
+        <a href="{{ url_for('dashboard') }}" class="btn btn-link mb-3">← Back to Dashboard</a>
+        <form method="POST" action="{{ url_for('creategroup') }}" enctype="multipart/form-data">
+          {{ form.hidden_tag() }}
+
+          <div class="mb-3">
+            {{ form.group_name.label(class="form-label") }}
+            {{ form.group_name(class="form-control") }}
             {% for error in form.group_name.errors %}
-                <span style="color: red;">[{{ error }}]</span>
+              <div class="text-danger small">{{ error }}</div>
             {% endfor %}
-        </div>
+          </div>
 
-        <div>
-            {{ form.address.label }}<br>
-            {{ form.address(size=32) }}<br>
+          <div class="mb-3">
+            {{ form.address.label(class="form-label") }}
+            {{ form.address(class="form-control") }}
             {% for error in form.address.errors %}
-                <span style="color: red;">[{{ error }}]</span>
+              <div class="text-danger small">{{ error }}</div>
             {% endfor %}
-        </div>
+          </div>
 
-        <div>
-            {{ form.profile_picture.label }}<br>
-            {{ form.profile_picture }}<br>
+          <div class="mb-3">
+            {{ form.profile_picture.label(class="form-label") }}
+            {{ form.profile_picture(class="form-control") }}
             {% for error in form.profile_picture.errors %}
-                <span style="color: red;">[{{ error }}]</span>
+              <div class="text-danger small">{{ error }}</div>
             {% endfor %}
-        </div>
+          </div>
 
-        <div>
-            <label for="search_username">Search Users by Name or Username:</label><br>
-            <input type="text" id="search_username" name="search_username" placeholder="Type to search...">
-            <!--Below is the search button we use in our JS Script code-->
-            <button type="button" id="search_button">Search</button><br>
-            <div id="search_results" class="search-results"></div>
-        </div>
+          <div class="mb-3">
+            <label for="search_username" class="form-label">Search Users by Name or Username:</label>
+            <div class="input-group">
+              <input type="text" id="search_username" name="search_username" class="form-control" placeholder="Type to search...">
+              <button type="button" id="search_button" class="btn btn-outline-primary">Search</button>
+            </div>
+            <div id="search_results" class="border rounded mt-2 p-2" style="max-height: 150px; overflow-y: auto;"></div>
+          </div>
 
-        <div class="selected-members">
-            <label>Selected Members:</label>
-            <ul id="selected_members"></ul>
+          <div class="mb-3">
+            <label class="form-label">Selected Members:</label>
+            <ul id="selected_members" class="list-group mb-2"></ul>
             <input type="hidden" id="members" name="members">
-        </div>
+          </div>
 
-        <div>
-            {{ form.submit() }}
-        </div>
-    </form>
+          <div class="d-grid">
+            {{ form.submit(class="btn btn-success") }}
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
 
-    <script>
-        // Function to handle user search
-        document.getElementById('search_button').addEventListener('click', function () {
-            //Below we are getting the value of the search_username input field and trimming it
-            const searchQuery = document.getElementById('search_username').value.trim();
-            if (searchQuery) {
-                //Below we are fetching the search_users route and passing the searchQuery as a query parameter
-                fetch(`/search_users?query=${searchQuery}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        //Below we are getting the search_results div and setting its innerHTML to the data we received from the fetch request
-                        const searchResults = document.getElementById('search_results');
-                        //Below we are mapping over the data and creating a div for each user
-                        //By using the backtick we are able to insert variables into the string using ${}
-                        searchResults.innerHTML = data.map(user => `
-                            <div onclick="addUser(${user.id}, '${user.username}', '${user.first_name}', '${user.last_name}')">
-                                ${user.username} (${user.first_name} ${user.last_name})
-                            </div>
-                        `).join('');
-                    });
-            }
+<script>
+  document.getElementById('search_button').addEventListener('click', function () {
+    const searchQuery = document.getElementById('search_username').value.trim();
+    if (searchQuery) {
+      fetch(`/search_users?query=${searchQuery}`)
+        .then(response => response.json())
+        .then(data => {
+          const searchResults = document.getElementById('search_results');
+          searchResults.innerHTML = data.map(user => `
+            <div class="search-result-item p-2 border-bottom" style="cursor:pointer;"
+                 onclick="addUser(${user.id}, '${user.username}', '${user.first_name}', '${user.last_name}')">
+              ${user.username} (${user.first_name} ${user.last_name})
+            </div>
+          `).join('');
         });
+    }
+  });
 
-        // Function to add a user to the selected members list. We are passing the parameters from the function above
-        function addUser(userId, username, firstName, lastName) {
-            // Below we are getting the selected_members and members input fields
-            const selectedMembers = document.getElementById('selected_members');
-            // Below is a hidden input field where we store the user ids of the selected members
-            const membersInput = document.getElementById('members');
+  function addUser(userId, username, firstName, lastName) {
+    const selectedMembers = document.getElementById('selected_members');
+    const membersInput = document.getElementById('members');
 
-            // Check if the user is already selected
-            if (!document.querySelector(`#selected_members li[data-user-id="${userId}"]`)) {
-                // Add the user to the selected members list
-                selectedMembers.innerHTML += `
-                    <li data-user-id="${userId}">
-                        ${username} (${firstName} ${lastName})
-                        <button type="button" onclick="removeUser(${userId})">Remove</button>
-                    </li>
-                `;
+    if (!document.querySelector(`#selected_members li[data-user-id="${userId}"]`)) {
+      selectedMembers.innerHTML += `
+        <li class="list-group-item d-flex justify-content-between align-items-center" data-user-id="${userId}">
+          ${username} (${firstName} ${lastName})
+          <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeUser(${userId})">Remove</button>
+        </li>
+      `;
 
-                // Update the hidden input with the selected user IDs
-                // Below we are getting the value of the members input field and splitting it into an array(ternary operator)
-                // -> condition ? value_if_true : value_if_false is the ternary operator logic
-                const currentMembers = membersInput.value ? membersInput.value.split(',') : [];
-                // Below adds the user id to the currentMembers array
-                currentMembers.push(userId);
-                // the line below converts the list of selected user IDs into a comma-separated string 
-                // and stores that string in a hidden input field (membersInput) so that it can be submitted with the form.
-                membersInput.value = currentMembers.join(',');
-            }
-        }
+      const currentMembers = membersInput.value ? membersInput.value.split(',') : [];
+      currentMembers.push(userId);
+      membersInput.value = currentMembers.join(',');
+    }
+  }
 
-        // Function to remove a user from the selected members list
-        function removeUser(userId) {
-            // Below we are getting the selected member by the user id
-            const selectedMember = document.querySelector(`#selected_members li[data-user-id="${userId}"]`);
-            if (selectedMember) {
-                // Removing the user from the selected members list DOM
-                selectedMember.remove();
-
-                // Update the hidden input with the remaining user IDs
-                const membersInput = document.getElementById('members');
-                // Removing the user from the hidden members input field
-                const currentMembers = membersInput.value.split(',').filter(id => id != userId);
-                membersInput.value = currentMembers.join(',');
-            }
-        }
-    </script>
-</body>
-</html>
+  function removeUser(userId) {
+    const selectedMember = document.querySelector(`#selected_members li[data-user-id="${userId}"]`);
+    if (selectedMember) {
+      selectedMember.remove();
+      const membersInput = document.getElementById('members');
+      const currentMembers = membersInput.value.split(',').filter(id => id != userId);
+      membersInput.value = currentMembers.join(',');
+    }
+  }
+</script>
+{% endblock %}

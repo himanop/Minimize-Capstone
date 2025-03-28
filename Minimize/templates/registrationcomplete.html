@@ -1,4 +1,18 @@
-<h1>You have successfully made your profile on Minimize</h1>
-<h2>Thank you for joining us!</h2>
-<h3>Now you can start minimizing your life!</h3>
-<h3>Click <a href="{{url_for('index')}}">here</a> to go back to the home page</h3>
+{% extends "base.html" %}
+
+{% block title %}Welcome to Minimize{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-8 text-center">
+    <div class="card shadow-sm rounded">
+      <div class="card-body py-5">
+        <h2 class="text-success mb-3">🎉 You’ve successfully created your profile on Minimize!</h2>
+        <p class="lead mb-3">Thank you for joining us.</p>
+        <p class="mb-4">You can now start minimizing your life and connecting with others.</p>
+        <a href="{{ url_for('index') }}" class="btn btn-primary">← Back to Home</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

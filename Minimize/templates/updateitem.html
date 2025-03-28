@@ -1,54 +1,57 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Update Item</title>
-</head>
-<body>
+{% extends "base.html" %}
 
-    <h1>Update Item</h1>
+{% block title %}Update Item{% endblock %}
 
-    <form method="POST" enctype="multipart/form-data">
-        {{ form.hidden_tag() }}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-8">
+    <div class="card shadow-sm rounded">
+      <div class="card-header bg-primary text-white">
+        <h4 class="mb-0">Update Item</h4>
+      </div>
+      <div class="card-body">
+        <form method="POST" enctype="multipart/form-data">
+          {{ form.hidden_tag() }}
 
-        <!-- Item Name -->
-        <p>
-            {{ form.item_name.label }} <br>
-            {{ form.item_name(size=30) }}
-        </p>
+          <div class="mb-3">
+            {{ form.item_name.label(class="form-label") }}
+            {{ form.item_name(class="form-control") }}
+          </div>
 
-        <!-- Description -->
-        <p>
-            {{ form.description.label }} <br>
-            {{ form.description(rows=3, cols=40) }}
-        </p>
+          <div class="mb-3">
+            {{ form.description.label(class="form-label") }}
+            {{ form.description(class="form-control", rows=3) }}
+          </div>
 
-        <!-- Is Sharable Checkbox -->
-        <p>
-            {{ form.is_sharable.label }}
-            {{ form.is_sharable() }}
-        </p>
+          <div class="form-check mb-3">
+            {{ form.is_sharable(class="form-check-input") }}
+            {{ form.is_sharable.label(class="form-check-label") }}
+          </div>
 
-        <!-- Existing Image Preview -->
-        {% if item.item_image %}
-            <h3>Current Image:</h3>
-            <img src="{{ url_for('static', filename='item_pics/' + item.item_image) }}" 
-                 alt="Item Image" 
-                 style="width: 150px; height: 150px; object-fit: cover;">
-        {% endif %}
+          {% if item.item_image %}
+            <div class="mb-3">
+              <h6 class="text-muted">Current Image:</h6>
+              <img src="{{ url_for('static', filename='item_pics/' + item.item_image) }}"
+                   alt="Item Image"
+                   class="img-thumbnail"
+                   style="width: 150px; height: 150px; object-fit: cover;">
+            </div>
+          {% endif %}
 
-        <!-- Image Upload -->
-        <p>
-            {{ form.item_image.label }} <br>
-            {{ form.item_image() }}
-        </p>
+          <div class="mb-3">
+            {{ form.item_image.label(class="form-label") }}
+            {{ form.item_image(class="form-control") }}
+          </div>
 
-        <!-- Submit & Cancel Buttons -->
-        <p>
-            <button type="submit" style="padding: 8px 15px; background-color: green; color: white; border: none;">Update Item</button>
-            <a href="{{ url_for('myitems') }}" style="padding: 8px 15px; background-color: gray; color: white; text-decoration: none;">Cancel</a>
-        </p>
-    </form>
+          <div class="d-flex justify-content-between">
+            <button type="submit" class="btn btn-success">Update Item</button>
+            <a href="{{ url_for('myitems') }}" class="btn btn-secondary">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
 
-</body>
-</html>
 

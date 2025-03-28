@@ -1,29 +1,40 @@
-<h1>Sign In: Enter our Portal</h1>
+{% extends "base.html" %}
 
-<a href="{{url_for('index')}}" class="link active">Minimize</a>
-<link rel="stylesheet" href="./static/registerbasic.css">
-<div class="content-section">
-    <!--the empty action below for the form means that it will go back to the same route we are on-->
-    <form method="POST" action="">
-        <!--Hidden tag is used for protection of the form-->
-        {{form.hidden_tag()}}
-        <fieldset class="form-group">
-                <!--We are using the variable names defined in forms.py to refer to the fields-->
-                <div>
-                    {{ form.username.label }}
-                    {{ form.username }}
-                </div>
-                <div>
-                    {{ form.password.label }}
-                    {{ form.password }}
-                </div>
-            {{form.submit}}
-        </fieldset>
-    </form>
-    <div>
-        <small>Forgot Password?
-            <!--The URL_FOR function accesses the route name. Not the URL.-->
-            <a href="{{url_for('signup')}}">Sign In!</a>
-        </small>
+{% block title %}Sign In{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-6">
+    <div class="card shadow-sm rounded">
+      <div class="card-header bg-primary text-white text-center">
+        <h4 class="mb-0">Sign In: Enter our Portal</h4>
+      </div>
+      <div class="card-body">
+        <form method="POST">
+          {{ form.hidden_tag() }}
+
+          <div class="mb-3">
+            {{ form.username.label(class="form-label") }}
+            {{ form.username(class="form-control") }}
+          </div>
+
+          <div class="mb-3">
+            {{ form.password.label(class="form-label") }}
+            {{ form.password(class="form-control") }}
+          </div>
+
+          <div class="d-grid mb-3">
+            {{ form.submit(class="btn btn-success") }}
+          </div>
+
+          <div class="text-center">
+            <small>Don't have an account? 
+              <a href="{{ url_for('signup') }}">Sign Up!</a>
+            </small>
+          </div>
+        </form>
+      </div>
     </div>
+  </div>
 </div>
+{% endblock %}

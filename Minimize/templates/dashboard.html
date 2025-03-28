@@ -1,15 +1,37 @@
-<h1>Welcome {{ user.first_name }}</h1>
-<h3>This is the dashboard</h3>
+{% extends "base.html" %}
 
-<!-- Navigation Links -->
-<a href="{{ url_for('myprofile') }}" class="link active">My Profile</a>
-<a href="{{ url_for('myitems') }}" class="link active">My Items</a>
-<a href="{{ url_for('mygroups') }}" class="link active">My Groups</a>
-<a href="{{ url_for('signout') }}" class="link active">Signout</a>
+{% block title %}Dashboard{% endblock %}
 
-<!-- Search for Users -->
-<h3>Search for a User</h3>
-<form action="{{ url_for('search') }}" method="POST">
-    <input type="text" name="username" placeholder="Enter username or name" required>
-    <button type="submit">Search</button>
-</form>
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-10">
+    <div class="card shadow-sm rounded">
+      <div class="card-body">
+        <h2 class="mb-3">Welcome, {{ user.first_name }} 👋</h2>
+        <p class="text-muted mb-4">This is your dashboard.</p>
+
+        <!-- Navigation Links -->
+        <div class="mb-4">
+          <div class="d-grid gap-2 d-md-flex justify-content-md-start">
+            <a href="{{ url_for('myprofile') }}" class="btn btn-outline-primary">My Profile</a>
+            <a href="{{ url_for('myitems') }}" class="btn btn-outline-primary">My Items</a>
+            <a href="{{ url_for('mygroups') }}" class="btn btn-outline-primary">My Groups</a>
+            <a href="{{ url_for('signout') }}" class="btn btn-danger">Sign Out</a>
+          </div>
+        </div>
+
+        <!-- Search for Users -->
+        <h4>Search for a User</h4>
+        <form action="{{ url_for('search') }}" method="POST" class="row g-2 mt-2">
+          <div class="col-md-9">
+            <input type="text" name="username" class="form-control" placeholder="Enter username or name" required>
+          </div>
+          <div class="col-md-3">
+            <button type="submit" class="btn btn-success w-100">Search</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
