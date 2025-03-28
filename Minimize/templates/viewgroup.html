@@ -57,7 +57,7 @@
             </li>
         {% endfor %}
     </ul>
-
+    <a href="{{ url_for('group_chat', group_id=group.id) }}">Group Chat</a>
     <a href="{{ url_for('mygroups') }}">Back to My Groups</a>
 </body>
 </html>

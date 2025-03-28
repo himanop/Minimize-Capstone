@@ -6,7 +6,7 @@ import uuid
 import os
 # print("After app import in routes.py")
 from Minimize.forms import RegistrationForm, LoginForm, IntroduceYourselfForm, YourHabitsForm, UpdateAccountForm, ItemForm, CreateGroupForm
-from Minimize.models import User, User_Socials, User_Habits, User_Items, Group, group_membership
+from Minimize.models import User, User_Socials, User_Habits, User_Items, Group, group_membership, Message
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, login_user, current_user, logout_user, login_required
 from config import Config
@@ -242,18 +242,27 @@ def myitems():
     return render_template('myitems.html', title=f"{user.first_name}'s Items", user=user, paginated_items=paginated_items)
 
 
+from sqlalchemy import or_
+
 @app.route('/search', methods=['GET', 'POST'])
 @login_required
 def search():
-    search_results = None  # Default to None if no search is performed
+    search_results = None
 
     if request.method == 'POST':
-        search_query = request.form.get('username', '').strip()  # Get input and remove extra spaces
+        search_query = request.form.get('username', '').strip()
 
         if search_query:
-            search_results = User.query.filter(User.username.ilike(f"%{search_query}%")).all()  # Case-insensitive search
+            search_results = User.query.filter(
+                or_(
+                    User.username.ilike(f"%{search_query}%"),
+                    User.first_name.ilike(f"%{search_query}%"),
+                    User.last_name.ilike(f"%{search_query}%")
+                )
+            ).all()
 
     return render_template('search.html', search_results=search_results)
+
 
 @app.route('/user/<int:user_id>')
 @login_required
@@ -505,32 +514,43 @@ def view_group(group_id):
 
     return render_template('viewgroup.html', group=group, is_owner=is_owner)
 
-@app.route('/group/<int:group_id>/chat', methods=['GET', 'POST'])
+@app.route('/group/<int:group_id>/chat')
 @login_required
 def group_chat(group_id):
     group = Group.query.get_or_404(group_id)
-
-    # Ensure the current user is a member of the group
     if current_user not in group.members:
-        flash("You are not a member of this group.", "error")
+        flash("You are not a member of this group.", "danger")
         return redirect(url_for('mygroups'))
+    messages = Message.query.filter_by(group_id=group_id).order_by(Message.timestamp).all()
+    return render_template('groupchat.html', group=group, messages=messages, group_id=group_id)
 
-    # Handle sending a new message
-    if request.method == 'POST':
-        content = request.form.get('content')
-        if content:
-            new_message = Message(
-                content=content,
-                user_id=current_user.id,
-                group_id=group.id
-            )
-            db.session.add(new_message)
-            db.session.commit()
 
-    # Retrieve all messages for the group
-    messages = Message.query.filter_by(group_id=group.id).order_by(Message.timestamp.asc()).all()
+# @app.route('/group/<int:group_id>/chat', methods=['GET', 'POST'])
+# @login_required
+# def group_chat(group_id):
+#     group = Group.query.get_or_404(group_id)
 
-    return render_template('group_chat.html', group=group, messages=messages)
+#     # Ensure the current user is a member of the group
+#     if current_user not in group.members:
+#         flash("You are not a member of this group.", "error")
+#         return redirect(url_for('mygroups'))
+
+#     # Handle sending a new message
+#     if request.method == 'POST':
+#         content = request.form.get('content')
+#         if content:
+#             new_message = Message(
+#                 content=content,
+#                 user_id=current_user.id,
+#                 group_id=group.id
+#             )
+#             db.session.add(new_message)
+#             db.session.commit()
+
+#     # Retrieve all messages for the group
+#     messages = Message.query.filter_by(group_id=group.id).order_by(Message.timestamp.asc()).all()
+
+#     return render_template('group_chat.html', group=group, messages=messages)
 
 # @app.route('/leave_group/<int:group_id>', methods=['POST'])
 # @login_required
