@@ -532,60 +532,60 @@ def group_chat(group_id):
 
     return render_template('group_chat.html', group=group, messages=messages)
 
-@app.route('/leave_group/<int:group_id>', methods=['POST'])
-@login_required
-def leave_group(group_id):
-    group = Group.query.get_or_404(group_id)
+# @app.route('/leave_group/<int:group_id>', methods=['POST'])
+# @login_required
+# def leave_group(group_id):
+#     group = Group.query.get_or_404(group_id)
 
-    # Ensure the user is in the group
-    if current_user in group.members:
-        group.members.remove(current_user)
-        db.session.commit()
-        flash(f'You have left the group "{group.group_name}".', 'success')
-    else:
-        flash('You are not a member of this group.', 'danger')
+#     # Ensure the user is in the group
+#     if current_user in group.members:
+#         group.members.remove(current_user)
+#         db.session.commit()
+#         flash(f'You have left the group "{group.group_name}".', 'success')
+#     else:
+#         flash('You are not a member of this group.', 'danger')
 
-    return redirect(url_for('mygroups'))
+#     return redirect(url_for('mygroups'))
 
-@app.route('/delete_group/<int:group_id>', methods=['GET', 'POST'])
-@login_required
-def delete_group(group_id):
-    group = Group.query.get_or_404(group_id)
+# @app.route('/delete_group/<int:group_id>', methods=['GET', 'POST'])
+# @login_required
+# def delete_group(group_id):
+#     group = Group.query.get_or_404(group_id)
 
-    # Ensure only the creator (first member) can delete the group
-    if current_user != group.members[0]:
-        flash("You are not authorized to delete this group.", "danger")
-        return redirect(url_for('view_group', group_id=group.id))
+#     # Ensure only the creator (first member) can delete the group
+#     if current_user != group.members[0]:
+#         flash("You are not authorized to delete this group.", "danger")
+#         return redirect(url_for('view_group', group_id=group.id))
 
-    if request.method == 'POST':
-        db.session.delete(group)
-        db.session.commit()
-        flash(f'Group "{group.group_name}" has been deleted.', 'success')
-        return redirect(url_for('mygroups'))
+#     if request.method == 'POST':
+#         db.session.delete(group)
+#         db.session.commit()
+#         flash(f'Group "{group.group_name}" has been deleted.', 'success')
+#         return redirect(url_for('mygroups'))
 
-    return render_template('deletegroup.html', group=group)
+#     return render_template('deletegroup.html', group=group)
 
-@app.route('/add_member/<int:group_id>', methods=['POST'])
-@login_required
-def add_member(group_id):
-    group = Group.query.get_or_404(group_id)
+# @app.route('/add_member/<int:group_id>', methods=['POST'])
+# @login_required
+# def add_member(group_id):
+#     group = Group.query.get_or_404(group_id)
 
-    # Ensure only the group creator can add members
-    if current_user != group.members[0]:
-        flash("You are not authorized to add members to this group.", "danger")
-        return redirect(url_for('view_group', group_id=group.id))
+#     # Ensure only the group creator can add members
+#     if current_user != group.members[0]:
+#         flash("You are not authorized to add members to this group.", "danger")
+#         return redirect(url_for('view_group', group_id=group.id))
 
-    username = request.form.get('username').strip()
-    user_to_add = User.query.filter_by(username=username).first()
+#     username = request.form.get('username').strip()
+#     user_to_add = User.query.filter_by(username=username).first()
 
-    if user_to_add:
-        if user_to_add in group.members:
-            flash(f"{username} is already in the group.", "warning")
-        else:
-            group.members.append(user_to_add)
-            db.session.commit()
-            flash(f"{username} has been added to the group!", "success")
-    else:
-        flash("User not found.", "danger")
+#     if user_to_add:
+#         if user_to_add in group.members:
+#             flash(f"{username} is already in the group.", "warning")
+#         else:
+#             group.members.append(user_to_add)
+#             db.session.commit()
+#             flash(f"{username} has been added to the group!", "success")
+#     else:
+#         flash("User not found.", "danger")
 
-    return redirect(url_for('view_group', group_id=group.id))
+#     return redirect(url_for('view_group', group_id=group.id))

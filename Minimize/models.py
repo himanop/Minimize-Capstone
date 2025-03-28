@@ -9,6 +9,8 @@ from flask_login import UserMixin
 def load_user(user_id):
     return User.query.get(int(user_id))
 
+# Many-to-Many relationship table. Connects one user to one group
+# Many users can be in many groups
 group_membership = db.Table('group_membership',
     db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
     db.Column('group_id', db.Integer, db.ForeignKey('groups.id'), primary_key=True)
