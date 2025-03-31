@@ -1,9 +1,12 @@
-from flask import Flask, render_template, flash, redirect, url_for, session, request, jsonify
+from flask import Flask, render_template, flash, redirect, url_for, session, request, jsonify, current_app
+from itsdangerous import URLSafeTimedSerializer
 from werkzeug.utils import secure_filename
 # print("Top of routes.py")
 from Minimize import app, bcrypt, db
 import uuid
 import os
+from Minimize.send_email import send_verification_email
+from Minimize.utils import confirm_token
 # print("After app import in routes.py")
 from Minimize.forms import RegistrationForm, LoginForm, IntroduceYourselfForm, YourHabitsForm, UpdateAccountForm, ItemForm, CreateGroupForm
 from Minimize.models import User, User_Socials, User_Habits, User_Items, Group, group_membership, Message
@@ -12,7 +15,6 @@ from flask_login import LoginManager, login_user, current_user, logout_user, log
 from config import Config
 
 
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://pgauser:hs@localhost:5432/minimize-db'
 print(f"inside route app instance {id(app)}")
 
 if not os.path.exists(app.config['PRO_PIC_UPLOAD_FOLDER']):
@@ -23,7 +25,6 @@ if not os.path.exists(app.config['ITEM_UPLOAD_FOLDER']):
 
 if not os.path.exists(app.config['GROUP_PIC_UPLOAD_FOLDER']):
     os.makedirs(app.config['GROUP_PIC_UPLOAD_FOLDER'])
-# db = SQLAlchemy(app)
 
 def allowed_file(filename):
     """Check if a file has an allowed extension."""
@@ -47,6 +48,23 @@ def signup():
         return redirect(url_for('introduceyourself'))  # Proceed to the next form
     
     return render_template('signup.html', title='Sign Up', form=form)
+
+@app.route('/resend_verification', methods=['GET', 'POST'])
+def resend_verification():
+    if request.method == 'POST':
+        email = request.form.get('email')
+        user = User.query.filter_by(email=email).first()
+        if user:
+            if user.is_verified:
+                flash('Account already verified. Please sign in.', 'info')
+                return redirect(url_for('signin'))
+            send_verification_email(user)
+            flash('Verification email has been resent. Check your inbox.', 'success')
+        else:
+            flash('Email not found. Please register.', 'danger')
+        return redirect(url_for('resend_verification'))
+
+    return render_template('resend_verification.html')
 
 
 @app.route('/introduceyourself', methods=['GET', 'POST'])
@@ -126,8 +144,9 @@ def yourhabits():
         # Clear session after saving
         session.clear()
 
-        flash("Registration complete! You can now log in.", "success")
-        return redirect(url_for('registrationcomplete'))
+        send_verification_email(new_user)
+        flash("Registration complete! Check your email to verify your account.", "info")
+        return redirect(url_for('signin'))  # Redirect to login page
     
     return render_template('yourhabits.html', title='Your Habits', form=form)
 
@@ -141,12 +160,10 @@ def signin():
     form = LoginForm()
     if form.validate_on_submit():
         user = User.query.filter_by(username=form.username.data).first()
-        # print(f"User: {user.username}")
-        # print(f"Password: {form.password
-        # .data}")
-        # print(f'Hash:{user.password_hash}')
-        # print(f'{bcrypt.check_password_hash(user.password_hash, form.password.data)}')
         if user and bcrypt.check_password_hash(user.password_hash, form.password.data):
+            if not user.is_verified:
+                flash("Please verify your email before logging in.", "warning")
+                return redirect(url_for('signin'))
             login_user(user)
             flash("You have been logged in!", "success")
             return redirect(url_for('dashboard'))
@@ -178,8 +195,6 @@ def updateprofile():
     user = current_user
     user_socials = User_Socials.query.filter_by(user_id=current_user.id).first()
     user_habits = User_Habits.query.filter_by(user_id=current_user.id).first()
-    # print(f"User Socials: {user_socials}")
-    # print(f"User Habits: {user_habits}")
     form_data = {
         "instagram_handle": user_socials.instagram_handle if user_socials else "",
         "snapchat_handle": user_socials.snapchat_handle if user_socials else "",
@@ -189,7 +204,6 @@ def updateprofile():
         "cleanliness": user_habits.cleanliness if user_habits else "",
         "relationship": user_habits.relationship if user_habits else "",
     }
-    # print(f"Form Data: {form_data}")
     form = UpdateAccountForm(data=form_data)
     if form.validate_on_submit():
         print("Form Validated")
@@ -363,18 +377,6 @@ def creategroup():
     form = CreateGroupForm()
 
     if request.method == 'POST':
-        # if 'submit_search' in request.form:
-        #     search_query = request.form.get('search_username', '').strip()
-        #     if search_query:
-        #         # Search for users by username, first name, or last name
-        #         users = User.query.filter(
-        #             (User.username.ilike(f'%{search_query}%')) |
-        #             (User.first_name.ilike(f'%{search_query}%')) |
-        #             (User.last_name.ilike(f'%{search_query}%'))
-        #         ).all()
-        #         form.members.choices = [(user.id, f"{user.username} ({user.first_name} {user.last_name})") for user in users]
-        #     else:
-        #         form.members.choices = []
 
         if form.submit.data:
             group_name = form.group_name.data
@@ -551,7 +553,22 @@ def send_message(group_id):
         return jsonify({'status': 'success'})
     return jsonify({'status': 'error'}), 400
 
+@app.route('/confirm/<token>')
+def confirm_email(token):
+    email = confirm_token(token)
+    if not email:
+        flash("The confirmation link is invalid or has expired.", "danger")
+        return redirect(url_for('signin'))
 
+    user = User.query.filter_by(email=email).first_or_404()
+    if user.is_verified:
+        flash("Account already verified. Please log in.", "info")
+    else:
+        user.is_verified = True
+        db.session.commit()
+        flash("Your account has been verified. You can now log in.", "success")
+
+    return redirect(url_for('signin'))
 
 # @app.route('/group/<int:group_id>/chat', methods=['GET', 'POST'])
 # @login_required

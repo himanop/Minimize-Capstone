@@ -1,6 +1,6 @@
 from flask import Flask
 from config import Config
-from Minimize.extensions import db, bcrypt, login_manager, migrate, socketio
+from Minimize.extensions import db, bcrypt, login_manager, migrate, socketio, mail
 
 app = None  # ✅ Initialize app as None
 
@@ -17,6 +17,7 @@ def create_app():
     bcrypt.init_app(app)
     # print("After bcrypt.init_app(app)")
     login_manager.init_app(app)
+    mail.init_app(app)
     # print("After login_manager.init_app(app)")
     migrate.init_app(app, db)
     socketio.init_app(app, cors_allowed_origins="*")
