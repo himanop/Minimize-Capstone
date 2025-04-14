@@ -5,15 +5,15 @@ from werkzeug.utils import secure_filename
 from Minimize import app, bcrypt, db
 import uuid
 import os
-from Minimize.send_email import send_verification_email
-from Minimize.utils import confirm_token
+from Minimize.send_email import send_verification_email, send_reset_email
+from Minimize.forms import RequestResetForm, ResetPasswordForm
+from Minimize.utils import confirm_token, confirm_reset_token, generate_confirmation_token, generate_reset_token
 # print("After app import in routes.py")
 from Minimize.forms import RegistrationForm, LoginForm, IntroduceYourselfForm, YourHabitsForm, UpdateAccountForm, ItemForm, CreateGroupForm
 from Minimize.models import User, User_Socials, User_Habits, User_Items, Group, group_membership, Message
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, login_user, current_user, logout_user, login_required
 from config import Config
-
 
 print(f"inside route app instance {id(app)}")
 
@@ -569,6 +569,40 @@ def confirm_email(token):
         flash("Your account has been verified. You can now log in.", "success")
 
     return redirect(url_for('signin'))
+
+@app.route('/reset_password', methods=['GET', 'POST'])
+def reset_request():
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard'))
+    form = RequestResetForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(email=form.email.data).first()
+        if user:
+            send_reset_email(user)
+            flash('Check your email for a password reset link.', 'info')
+        else:
+            flash('No account with that email exists.', 'danger')
+        return redirect(url_for('signin'))
+    return render_template('reset_request.html', form=form)
+
+@app.route('/reset_password/<token>', methods=['GET', 'POST'])
+def reset_token(token):
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard'))
+    email = confirm_reset_token(token)
+    if not email:
+        flash('The reset link is invalid or expired.', 'warning')
+        return redirect(url_for('reset_request'))
+    
+    user = User.query.filter_by(email=email).first_or_404()
+    form = ResetPasswordForm()
+    if form.validate_on_submit():
+        hashed_pw = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
+        user.password_hash = hashed_pw
+        db.session.commit()
+        flash('Your password has been updated. You can now log in.', 'success')
+        return redirect(url_for('signin'))
+    return render_template('reset_token.html', form=form)
 
 # @app.route('/group/<int:group_id>/chat', methods=['GET', 'POST'])
 # @login_required

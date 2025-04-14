@@ -34,18 +34,34 @@
   // Load messages from server
   async function loadMessages() {
     const response = await fetch(`/group/${groupId}/chat/messages`);
+    // Below we convert the response to JSON
+    if (!response.ok) {
+      console.error('Failed to load messages:', response.statusText);
+      return;
+    }
+    // Assuming the server returns a JSON array of messages
+    // Each message should have properties: username, timestamp, and content
+    // Example: [{ "username": "Alice", "timestamp": "2023-10-01 12:00", "content": "Hello!" }, ...]
     const messages = await response.json();
-
+    // Clear the chat box before appending new messages
+    // Assuming messages are sorted by timestamp in descending order
+    // If not, you can sort them here
     chatBox.innerHTML = '';
+    // Append each message to the chat box
     messages.forEach(msg => {
+      // Create a new div for each message
       const el = document.createElement('div');
+      // Set the inner HTML of the div
+      // Use template literals for better readability
       el.classList.add('mb-2');
+      // Assuming msg has properties: username, timestamp, and content
       el.innerHTML = `<strong>${msg.username}</strong> 
                       <small class="text-muted">${msg.timestamp}</small><br>
                       ${msg.content}`;
       chatBox.appendChild(el);
     });
-
+    // Line below automatically scrolls the chat window to the bottom so the newest messages
+    // are always visible without the user having to scroll manually.
     chatBox.scrollTop = chatBox.scrollHeight;
   }
 

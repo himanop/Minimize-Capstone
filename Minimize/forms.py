@@ -1,7 +1,7 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, TextAreaField, URLField, BooleanField, EmailField, FileField, DateField, SubmitField, SelectField, SelectMultipleField
 from flask_wtf.file import FileAllowed, FileRequired, FileField
-from wtforms.validators import DataRequired, Length, EqualTo, ValidationError
+from wtforms.validators import DataRequired, Length, EqualTo, ValidationError, Email
 from Minimize.models import User, User_Socials, User_Habits
 
 class RegistrationForm(FlaskForm):
@@ -73,3 +73,12 @@ class CreateGroupForm(FlaskForm):
     members = SelectMultipleField('Select Users to Add', coerce=int)  # Checkbox for users
     submit_search = SubmitField('Search')  # Search button
     submit = SubmitField('Create Group')
+
+class RequestResetForm(FlaskForm):
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    submit = SubmitField('Request Password Reset')
+
+class ResetPasswordForm(FlaskForm):
+    password = PasswordField('New Password', validators=[DataRequired(), Length(min=6)])
+    confirm_password = PasswordField('Confirm New Password', validators=[DataRequired(), EqualTo('password')])
+    submit = SubmitField('Reset Password')
