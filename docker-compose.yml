@@ -1,0 +1,42 @@
+version: '3.9'
+
+services:
+  web:
+    build: .
+    container_name: minimize-app
+    ports:
+      - "5001:5000"
+    depends_on:
+      - db
+    environment:
+      - FLASK_APP=run.py
+      - FLASK_ENV=development
+      - SQLALCHEMY_DATABASE_URI=postgresql://pgauser:hs@db:5432/minimize-db
+    volumes:
+      - .:/app
+
+  db:
+    image: postgres
+    container_name: dplocal_pgdb
+    restart: always
+    # ports:
+    #   - "5433:5432"
+    environment:
+      POSTGRES_USER: pgauser
+      POSTGRES_PASSWORD: hs
+    volumes:
+      - ./data:/var/lib/postgresql/data
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: dppgadmin4_container
+    restart: always
+    ports:
+      - "8889:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: singh.himanshup@gmail.com
+      PGADMIN_DEFAULT_PASSWORD: hs
+    volumes:
+      - ./pgadmin-data:/var/lib/pgadmin
+
+volumes:
+  postgres_data:

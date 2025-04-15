@@ -195,6 +195,7 @@ def updateprofile():
     user = current_user
     user_socials = User_Socials.query.filter_by(user_id=current_user.id).first()
     user_habits = User_Habits.query.filter_by(user_id=current_user.id).first()
+
     form_data = {
         "instagram_handle": user_socials.instagram_handle if user_socials else "",
         "snapchat_handle": user_socials.snapchat_handle if user_socials else "",
@@ -205,32 +206,42 @@ def updateprofile():
         "relationship": user_habits.relationship if user_habits else "",
     }
     form = UpdateAccountForm(data=form_data)
+
     if form.validate_on_submit():
         print("Form Validated")
-        # Update or Create Social Media Entry
+
+        # Update or create User_Socials
         if user_socials:
             print("User Socials Exist and we are inside the if statement")
             user_socials.instagram_handle = form.instagram_handle.data
             user_socials.snapchat_handle = form.snapchat_handle.data
             user_socials.short_bio = form.short_bio.data
-            profile_picture = form.profile_picture.data
-            file_extension = profile_picture.filename.rsplit('.', 1)[1].lower()
-            unique_filename = f"{uuid.uuid4().hex}.{file_extension}"
 
-            file_path = os.path.join(app.config['PRO_PIC_UPLOAD_FOLDER'], unique_filename)
-            profile_picture.save(file_path)
-            user_socials.profile_picture = unique_filename
+            if form.profile_picture.data:
+                profile_picture = form.profile_picture.data
+                if hasattr(profile_picture, 'filename') and profile_picture.filename:
+                    file_extension = profile_picture.filename.rsplit('.', 1)[1].lower()
+                    unique_filename = f"{uuid.uuid4().hex}.{file_extension}"
+
+                    file_path = os.path.join(app.config['PRO_PIC_UPLOAD_FOLDER'], unique_filename)
+                    profile_picture.save(file_path)
+                    user_socials.profile_picture = unique_filename
 
         print(f'User Socials: {user_socials}')
+
+        # Update or create User_Habits
         if user_habits:
             user_habits.sleep = form.sleep.data
             user_habits.cleanliness = form.cleanliness.data
             user_habits.relationship = form.relationship.data
+
         print(f"User Habits: {user_habits}")
         db.session.commit()
         flash('Profile updated successfully!', 'success')
         return redirect(url_for('profileupdated'))
+
     return render_template('updateprofile.html', title='Update Profile', form=form)
+
 
 @app.route('/profileupdated')
 @login_required
