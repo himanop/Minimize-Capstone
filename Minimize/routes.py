@@ -388,12 +388,11 @@ def creategroup():
     form = CreateGroupForm()
 
     if request.method == 'POST':
-
         if form.submit.data:
             group_name = form.group_name.data
             address = form.address.data
-            member_ids = request.form.get('members', '').split(',')  # Get selected user IDs from the hidden input
-            member_ids = [int(id) for id in member_ids if id.strip()]  # Validate member IDs
+            member_ids = request.form.get('members', '').split(',')
+            member_ids = [int(id) for id in member_ids if id.strip()]
             profile_picture = form.profile_picture.data
 
             # Check if the group name already exists
@@ -415,7 +414,7 @@ def creategroup():
                 group_name=group_name,
                 address=address,
                 profile_picture=profile_picture_filename,
-                creator_id=current_user.id  # Set the creator_id to the current user's ID
+                creator_id=current_user.id
             )
             db.session.add(new_group)
             db.session.commit()
@@ -423,12 +422,12 @@ def creategroup():
             # Add the current user as the first member
             new_group.members.append(current_user)
 
-            # Add selected users to the group
+            # Add selected users to the group (avoid duplicates)
             for user_id in member_ids:
                 try:
-                    user_id = int(user_id)  # Ensure user_id is an integer
+                    user_id = int(user_id)
                     user = User.query.get(user_id)
-                    if user:
+                    if user and user not in new_group.members:
                         new_group.members.append(user)
                 except (ValueError, TypeError):
                     flash(f"Invalid user ID: {user_id}", "error")
@@ -438,6 +437,7 @@ def creategroup():
             return redirect(url_for('view_group', group_id=new_group.id))
 
     return render_template('creategroup.html', form=form)
+
 
 @app.route('/search_users')
 @login_required

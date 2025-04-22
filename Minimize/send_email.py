@@ -4,6 +4,7 @@ from Minimize import mail
 from flask import url_for
 from Minimize.utils import generate_confirmation_token, generate_reset_token
 
+#User object is sent here from the associated route function to be processed
 def send_verification_email(user):
     token = generate_confirmation_token(user.email)
     confirm_url = url_for('confirm_email', token=token, _external=True)

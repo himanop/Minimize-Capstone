@@ -25,4 +25,4 @@ RUN pip install --upgrade pip && pip install -r requirements.txt
 COPY . .
 
 # Run database migrations and start the app
-CMD flask run --host=0.0.0.0 --port=5000
+CMD python3 run.py --host=0.0.0.0 --port=5000
