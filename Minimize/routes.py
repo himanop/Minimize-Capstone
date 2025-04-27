@@ -361,6 +361,25 @@ def update_item(item_id):
 
     return render_template('updateitem.html', form=form, item=item)
 
+@app.route('/myitems/delete/<int:item_id>', methods=['POST'])
+@login_required
+def delete_item(item_id):
+    item = User_Items.query.get_or_404(item_id)
+
+    if item.user_id != current_user.id:
+        flash("You don't have permission to delete this item.", "danger")
+        return redirect(url_for('myitems'))
+
+    # Optional: delete image file
+    if item.item_image:
+        image_path = os.path.join(app.static_folder, 'item_pics', item.item_image)
+        if os.path.exists(image_path):
+            os.remove(image_path)
+
+    db.session.delete(item)
+    db.session.commit()
+    flash("Item deleted successfully.", "success")
+    return redirect(url_for('myitems'))
 
 @app.route('/mygroups')
 @login_required
