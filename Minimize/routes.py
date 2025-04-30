@@ -267,7 +267,7 @@ def myitems():
     return render_template('myitems.html', title=f"{user.first_name}'s Items", user=user, paginated_items=paginated_items)
 
 
-from sqlalchemy import or_
+from sqlalchemy import or_, and_
 
 @app.route('/search', methods=['GET', 'POST'])
 @login_required
@@ -278,13 +278,25 @@ def search():
         search_query = request.form.get('username', '').strip()
 
         if search_query:
-            search_results = User.query.filter(
-                or_(
-                    User.username.ilike(f"%{search_query}%"),
-                    User.first_name.ilike(f"%{search_query}%"),
-                    User.last_name.ilike(f"%{search_query}%")
-                )
-            ).all()
+            # Split input into parts (e.g., ['Himanshu', 'Singh'])
+            name_parts = search_query.split()
+
+            # Base query filters
+            filters = [
+                User.username.ilike(f"%{search_query}%"),
+                User.first_name.ilike(f"%{search_query}%"),
+                User.last_name.ilike(f"%{search_query}%")
+            ]
+
+            # If two words, try matching full name combinations
+            if len(name_parts) == 2:
+                first, last = name_parts
+                filters.append(and_(
+                    User.first_name.ilike(f"%{first}%"),
+                    User.last_name.ilike(f"%{last}%")
+                ))
+
+            search_results = User.query.filter(or_(*filters)).all()
 
     return render_template('search.html', search_results=search_results)
 
